@@ -1,12 +1,13 @@
 import pymongo
+from pymongo.errors import DuplicateKeyError
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["pdf_db"]
 users = db["users"]
 
+users.create_index("user_id", unique=True)
 users.create_index("username", unique=True)
 users.create_index("email", unique=True)
-users.create_index("user_id", unique=True)
 
 from datetime import datetime
 import uuid
@@ -17,7 +18,15 @@ def hashPassword(password: str) -> str:
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed.decode("utf-8")
 
-def addUser(username: str, password: str, name_first: str, name_last: str, email: str) -> None:
+from enum import Enum
+
+class AddUserResult(Enum):
+    SUCCESS = 0
+    ERROR_UNKNOWN = 1
+    ERROR_EXISTS_USERNAME = 2
+    ERROR_EXISTS_EMAIL = 3
+
+def addUser(username: str, password: str, name_first: str, name_last: str, email: str) -> AddUserResult:
     user = {
         "user_id": str(uuid.uuid4()),
         "username": username,
@@ -30,6 +39,16 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
         "date_joined": datetime.now(datetime.timezone.utc)
     }
 
-    users.insert_one(user)
-
+    try:
+        users.insert_one(user)
+        return AddUserResult.SUCCESS
+    except DuplicateKeyError as e:
+        field = list(e.details["keyPattern"].keys())[0]
+        match field:
+            case "username":
+                return AddUserResult.ERROR_EXISTS_USERNAME
+            case "email":
+                return AddUserResult.ERROR_EXISTS_EMAIL
+            case _:
+                return AddUserResult.ERROR_UNKNOWN
 
