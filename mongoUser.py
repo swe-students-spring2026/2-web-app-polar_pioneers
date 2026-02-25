@@ -8,12 +8,12 @@ from datetime import datetime
 import uuid
 import bcrypt
 
-def hashPassword(password):
+def hashPassword(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed.decode("utf-8")
 
-def addUser(username, password, name_first, name_last, email):
+def addUser(username: str, password: str, name_first: str, name_last: str, email: str) -> None:
     user = {
         "user_id": str(uuid.uuid4()),
         "username": username,
