@@ -52,3 +52,11 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
             case _:
                 return AddUserResult.ERROR_UNKNOWN
 
+def getUserById(id):
+    return users.find_one({"user_id": id})
+
+def getUserByUsername(username):
+    return users.find_one({"username": username})
+
+def getUserByEmail(email):
+    return users.find_one({"email": email})
