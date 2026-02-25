@@ -2,6 +2,7 @@ import pymongo
 from gridfs import GridFSBucket
 
 from datetime import datetime
+import uuid
 
 from enum import Enum
 from typing import TypedDict
@@ -43,3 +44,33 @@ sessions.create_index("session_id", unique=True)
 sessions.create_index([("user_id", 1), ("input.requested_at", -1)])
 sessions.create_index("input.resume_file_id")
 
+def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf") -> str:
+    session_id = str(uuid.uuid4())
+    requested_at = datetime.now(datetime.timezone.utc)
+
+    resume_file_id = fs.upload_from_stream(
+        resume_file_name,
+        resume_file_bytes,
+        metadata = {
+            "user_id": user_id,
+            "session_id": session_id,
+            "content_type": resume_file_type,
+            "requested_at": requested_at,
+        },
+    )
+
+    session = {
+        "session_id": session_id,
+        "user_id": user_id,
+        "status": SessionStatus.PENDING,
+        "input": {
+            "requested_at": requested_at,
+            "resume_file_name": resume_file_name,
+            "resume_file_id": resume_file_id,
+            "job_description": job_description,
+        },
+        "output": None,
+    }
+
+    sessions.insert_one(session)
+    return session_id
