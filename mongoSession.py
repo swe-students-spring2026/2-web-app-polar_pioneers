@@ -56,7 +56,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
             "session_id": session_id,
             "content_type": resume_file_type,
             "requested_at": requested_at,
-        },
+        }
     )
 
     session = {
@@ -69,7 +69,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
         },
-        "output": None,
+        "output": None
     }
 
     sessions.insert_one(session)
