@@ -1,8 +1,10 @@
 import pymongo
 from gridfs import GridFSBucket
+from gridfs.errors import NoFile
 
 from datetime import datetime
 import uuid
+import io
 
 from enum import Enum
 from typing import TypedDict
@@ -105,3 +107,13 @@ def completeSession(session_id: str, missing_skills, strongest_matches, suggeste
     )
 
     return result.modified_count == 1
+
+def getFileBytesById(file_id) -> bytes | None:
+    buffer = io.BytesIO()
+    
+    try:
+        fs.download_to_stream(ObjectId(file_id), buffer)
+    except NoFile:
+        return None
+
+    return buffer.getvalue()
