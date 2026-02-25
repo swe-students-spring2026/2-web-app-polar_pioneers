@@ -4,6 +4,10 @@ client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["pdf_db"]
 users = db["users"]
 
+users.create_index("username", unique=True)
+users.create_index("email", unique=True)
+users.create_index("user_id", unique=True)
+
 from datetime import datetime
 import uuid
 import bcrypt
@@ -27,3 +31,5 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
     }
 
     users.insert_one(user)
+
+
