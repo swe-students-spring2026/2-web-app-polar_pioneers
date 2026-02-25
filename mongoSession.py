@@ -46,7 +46,7 @@ fs = GridFSBucket(db, bucket_name="resumes")
 
 sessions.create_index("session_id", unique=True)
 sessions.create_index([("user_id", 1), ("input.requested_at", -1)])
-sessions.create_index("status")
+sessions.create_index([("user_id", 1), ("status", 1), ("input.requested_at", -1)])
 sessions.create_index("input.resume_file_id")
 
 def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf") -> str:
@@ -92,8 +92,8 @@ def getMostRecentSessionByUserId(user_id: str) -> Session | None:
         return None
     return cast(Session, result)
 
-def getAllSessionsByStatus(status: SessionStatus) -> list[Session]:
-    results = list(sessions.find({"status": status}))
+def getAllSessionsByStatus(user_id: str, status: SessionStatus) -> list[Session]:
+    results = list(sessions.find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
     return cast(list[Session], results)
 
 def completeSession(session_id: str, missing_skills, strongest_matches, suggested_edits) -> bool:
