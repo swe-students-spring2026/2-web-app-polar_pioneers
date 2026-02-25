@@ -105,7 +105,7 @@ def completeSession(session_id: str, missing_skills, strongest_matches, suggeste
                 "completed_at": datetime.now(datetime.timezone.utc),
                 "missing_skills": missing_skills,
                 "strongest_matches": strongest_matches,
-                "suggested_edits": suggested_edits,
+                "suggested_edits": suggested_edits
             }
         }}
     )
