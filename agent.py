@@ -1,5 +1,5 @@
 from myllm import GetLLM
-from request_prompt import FILTER_PROMPT
+# from request_prompt import FILTER_PROMPT
 from langchain_core.prompts import ChatPromptTemplate
 import asyncio
 from state import AppState
@@ -31,6 +31,8 @@ class ResumeAgent(GetLLM):
     
         answer = await chain.ainvoke({"user_request": state.user_input})
 
+        state.result = answer.content.lower() 
+
         #use y/n for condition checking 
         # while(answer.content == "Sorry I can only answer questions related to the mailroom information."):
         #     user_input = input("Sorry I can only answer questions related to the mailroom information. Please ask again.\n User Query: ")
@@ -41,5 +43,5 @@ class ResumeAgent(GetLLM):
     async def __call__(self, state):
         return await self.run(state)
     
-    # mailbot("How many big packages does the mailroom have")
+    # ResumeAgent("How is this resume?")
 
