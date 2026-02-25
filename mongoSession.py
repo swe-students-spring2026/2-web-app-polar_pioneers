@@ -22,6 +22,7 @@ class SessionInput(TypedDict):
     job_description: str
     resume_file_name: str
     resume_file_id: ObjectId
+    resume_file_type: str
 
 class SessionOutput(TypedDict):
     completed_at: datetime
@@ -69,6 +70,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
             "job_description": job_description,
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
+            "resume_file_type": resume_file_type
         },
         "output": None
     }
