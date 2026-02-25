@@ -12,7 +12,7 @@ from bson.objectid import ObjectId
 
 class SessionStatus(Enum):
     PENDING = 0
-    FINISHED = 1
+    COMPLETE = 1
     ERROR = 2
 
 class SessionInput(TypedDict):
@@ -96,7 +96,7 @@ def completeSession(session_id: str, missing_skills, strongest_matches, suggeste
     result = sessions.update_one(
         {"session_id": session_id},
         {"$set": {
-            "status": SessionStatus.FINISHED,
+            "status": SessionStatus.COMPLETE,
             "output": {
                 "completed_at": datetime.now(datetime.timezone.utc),
                 "missing_skills": missing_skills,
