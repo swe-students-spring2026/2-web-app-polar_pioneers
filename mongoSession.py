@@ -34,6 +34,7 @@ class Session(TypedDict):
     session_id: str
     user_id: str
     status: SessionStatus
+    error_msg: str | None
     input: SessionInput
     output: SessionOutput | None
 
@@ -65,6 +66,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
         "session_id": session_id,
         "user_id": user_id,
         "status": SessionStatus.PENDING,
+        "error_msg": None,
         "input": {
             "requested_at": datetime.now(datetime.timezone.utc),
             "job_description": job_description,
@@ -105,6 +107,17 @@ def completeSession(session_id: str, missing_skills, strongest_matches, suggeste
                 "strongest_matches": strongest_matches,
                 "suggested_edits": suggested_edits,
             }
+        }}
+    )
+
+    return result.modified_count == 1
+
+def setSessionError(session_id: str, error_msg: str) -> bool:
+    result = sessions.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "status": SessionStatus.ERROR,
+            "error_msg": error_msg
         }}
     )
 
