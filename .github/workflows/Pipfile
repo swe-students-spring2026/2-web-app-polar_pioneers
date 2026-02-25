@@ -8,6 +8,9 @@ gitcommitlogger = "*"
 requests = "*"
 pytz = "*"
 python-dateutil = "*"
+langchain = "*"
+langchain-core = "*"
+langchain-openai = "*"
 
 [dev-packages]
 

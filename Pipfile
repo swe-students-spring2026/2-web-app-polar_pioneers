@@ -4,7 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+<<<<<<< HEAD
 pymongo = "*"
+=======
+flask = "==2.2.3"
+pymongo = "==4.6.0"
+python-dotenv = "==1.0.0"
+flask-login = "==0.6.3"
+langchain = "*"
+langchain-openai = "*"
+langchain-core = "*"
+typing-inspection = "*"
+>>>>>>> Blake
 
 [dev-packages]
 
