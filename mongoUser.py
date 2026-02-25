@@ -19,15 +19,12 @@ class AddUserResult(TypedDict):
     status: AddUserStatus
     user_id: str | None # if status != SUCCESS, user_id = None
 
-class Name(TypedDict):
-    first: str
-    last: str
-
 class User(TypedDict):
     user_id: str
     username: str
     password_digest: str
-    name: Name
+    name_first: str
+    name_last: str
     email: str
     date_joined: datetime
 
@@ -50,10 +47,8 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
         "user_id": user_id,
         "username": username,
         "password_digest": hashPassword(password),
-        "name": {
-            "first": name_first,
-            "last": name_last
-        },
+        "name_first": name_first,
+        "name_last": name_last,
         "email": email,
         "date_joined": datetime.now(datetime.timezone.utc)
     }
