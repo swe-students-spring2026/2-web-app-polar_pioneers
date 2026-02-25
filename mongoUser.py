@@ -52,11 +52,35 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
             case _:
                 return AddUserResult.ERROR_UNKNOWN
 
-def getUserById(id):
-    return users.find_one({"user_id": id})
+from typing import TypedDict
+from typing import cast
 
-def getUserByUsername(username):
-    return users.find_one({"username": username})
+class Name(TypedDict):
+    first: str
+    last: str
 
-def getUserByEmail(email):
-    return users.find_one({"email": email})
+class User(TypedDict):
+    user_id: str
+    username: str
+    password_digest: str
+    name: Name
+    email: str
+    date_joined: datetime
+
+def getUserById(id: str) -> User | None:
+    result = users.find_one({"user_id": id})
+    if(result is None):
+        return None
+    return cast(User, result)
+
+def getUserByUsername(username: str):
+    result = users.find_one({"username": username})
+    if(result is None):
+        return None
+    return cast(User, result)
+
+def getUserByEmail(email: str):
+    result = users.find_one({"email": email})
+    if(result is None):
+        return None
+    return cast(User, result)
