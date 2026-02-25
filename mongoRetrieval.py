@@ -6,7 +6,7 @@ db = client["pdf_db"]
 gridObject=gridfs.GridFS(db)
 fileHandle=open("file_id.txt","r")
 file_id=fileHandle.read()
-resume_file=gridObject.get(file_id)
+resume_file=gridObject.get(ObjectId(file_id))
 data=resume_file.read()
 fileHandle.close()
 
