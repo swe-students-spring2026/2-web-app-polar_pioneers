@@ -91,3 +91,19 @@ def getMostRecentSessionByUserId(user_id: str) -> Session | None:
 def getAllSessionsByStatus(status: SessionStatus) -> list[Session]:
     results = list(sessions.find({"status": status}))
     return cast(list[Session], results)
+
+def completeSession(session_id: str, missing_skills, strongest_matches, suggested_edits) -> bool:
+    result = sessions.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "status": SessionStatus.FINISHED,
+            "output": {
+                "completed_at": datetime.now(datetime.timezone.utc),
+                "missing_skills": missing_skills,
+                "strongest_matches": strongest_matches,
+                "suggested_edits": suggested_edits,
+            }
+        }}
+    )
+
+    return result.modified_count == 1
