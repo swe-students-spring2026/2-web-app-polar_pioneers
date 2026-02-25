@@ -5,7 +5,15 @@ from langgraph.graph import StateGraph, START, END
 
 async def ResumeGoRun(user_input: str):
 
-    agentNode  = ResumeAgent(prompt="reply question for resume, if no reseume added, just assume one", user_input=user_input)
+    agentNode  = ResumeAgent(
+        prompt=(
+            "You are an expert resume reviewer. Analyze the provided information and return helpful, specific feedback. "
+            "If resume details are incomplete, make reasonable assumptions and still provide an answer. "
+            "Do not ask the user to clarify or provide more details. "
+            "Return concise sections: Match Score (0-100), Strong Matches, Missing Skills, Suggested Edits, and AI Insights."
+        ),
+        user_input=user_input,
+    )
     # checkerNode = OutputChecker(prompt=CHECKER_PROMPT)
     
     workflow = StateGraph(AppState)

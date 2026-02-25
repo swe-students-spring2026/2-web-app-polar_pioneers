@@ -1,3 +1,6 @@
+import asyncio
+from datetime import date
+
 from flask import Flask, flash, redirect, render_template, request, url_for
 
 app = Flask(__name__)
@@ -47,6 +50,11 @@ def get_run_or_first(run_id: str):
     return DEMO_RUNS[0]
 
 
+def next_run_id() -> str:
+    ids = [int(run.get("_id", "0")) for run in DEMO_RUNS if str(run.get("_id", "")).isdigit()]
+    return str(max(ids, default=0) + 1)
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -82,8 +90,87 @@ def dashboard():
 @app.route("/runs/new", methods=["GET", "POST"])
 def new_run():
     if request.method == "POST":
-        flash("Analysis submitted (demo mode).", "success")
-        return redirect(url_for("dashboard"))
+        action = request.form.get("action")
+        company = request.form.get("company", "").strip()
+        role = request.form.get("role", "").strip()
+        title = request.form.get("title", "").strip()
+        notes = request.form.get("notes", "").strip()
+        job_description = request.form.get("job_description", "").strip()
+
+        # Keep save-draft behavior lightweight.
+        if action == "draft":
+            run_id = next_run_id()
+            DEMO_RUNS.insert(
+                0,
+                {
+                    "_id": run_id,
+                    "title": title or (f"{company} — {role}".strip(" —") or "Untitled Draft"),
+                    "company": company,
+                    "role": role,
+                    "score": 0,
+                    "created_at": date.today().isoformat(),
+                    "status": "Draft",
+                    "notes": notes,
+                    "strengths": [],
+                    "missing_skills": [],
+                    "suggested_edits": [],
+                    "insights": "Draft saved. Run analysis to generate AI insights.",
+                },
+            )
+            flash("Draft saved.", "success")
+            return redirect(url_for("dashboard"))
+
+        if not job_description:
+            flash("Please paste a job description before running analysis.", "error")
+            return redirect(url_for("new_run"))
+
+        ai_insights = ""
+        try:
+            # Lazy import keeps the web app bootable even if AI deps are not installed yet.
+            from appRun import ResumeGoRun
+
+            uploaded_file = request.files.get("resume_file")
+            resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
+
+            analysis_request = (
+                "Please analyze this candidate for the role and provide:\n"
+                "1) Match Score (0-100)\n"
+                "2) Strong Matches (bullet list)\n"
+                "3) Missing Skills (bullet list)\n"
+                "4) Suggested Edits (bullet list)\n"
+                "5) Final AI Insights paragraph\n\n"
+                f"Company: {company or 'N/A'}\n"
+                f"Role: {role or 'N/A'}\n"
+                f"Analysis title: {title or 'N/A'}\n"
+                f"Notes: {notes or 'N/A'}\n"
+                f"Uploaded resume filename: {resume_filename}\n\n"
+                "Job description:\n"
+                f"{job_description}"
+            )
+
+            result = asyncio.run(ResumeGoRun(analysis_request))
+            ai_insights = str(result.get("result", "")).strip()
+        except Exception as exc:
+            ai_insights = f"Analysis failed: {exc}"
+
+        run_id = next_run_id()
+        new_item = {
+            "_id": run_id,
+            "title": title or (f"{company} — {role}".strip(" —") or "Untitled Analysis"),
+            "company": company,
+            "role": role,
+            "score": 70,
+            "created_at": date.today().isoformat(),
+            "status": "Applied",
+            "notes": notes,
+            "strengths": [],
+            "missing_skills": [],
+            "suggested_edits": [],
+            "insights": ai_insights or "No insights were returned.",
+        }
+        DEMO_RUNS.insert(0, new_item)
+        flash("Analysis completed.", "success")
+        return redirect(url_for("run_detail", run_id=run_id))
     return render_template("new_run.html")
 
 

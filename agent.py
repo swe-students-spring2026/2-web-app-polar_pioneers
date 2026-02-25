@@ -31,7 +31,7 @@ class ResumeAgent(GetLLM):
     
         answer = await chain.ainvoke({"user_request": state.user_input})
 
-        state.result = answer.content.lower() 
+        state.result = answer.content
 
         #use y/n for condition checking 
         # while(answer.content == "Sorry I can only answer questions related to the mailroom information."):
