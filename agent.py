@@ -1,10 +1,10 @@
 from myllm import GetLLM
-from request_prompt import FILTER_PROMPT 
+from request_prompt import FILTER_PROMPT
 from langchain_core.prompts import ChatPromptTemplate
 import asyncio
 from state import AppState
 
-class MailRoomChatBot(GetLLM):
+class ResumeAgent(GetLLM):
 
     def __init__(self, prompt, user_input:str):
         super().__init__(prompt=prompt)

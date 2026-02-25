@@ -1,0 +1,36 @@
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
+
+class AppState(BaseModel):
+    """
+    State model for the AI Mailroom system.
+    """
+
+    user_input: str
+    """ This is the query input from the user to ask question about our AI resume grading/consultant service, 
+    it can be a scanned pdf of their resume, a question or a request for information related to the the resume , job market, personal info for applicants, etc"""
+    result: Optional[str] = None
+    """ This is the result from the client node, it will be the answer to the user input query. """
+
+
+    output_checker: Optional[str] = None
+    """ This is the result from the output checker node, it will be either 'yes'
+    or 'no' based on whether the result correctly answered the user input query. """
+
+    tryout: Optional[int] = None
+
+    maxtry: Optional[int] = Field(default=5, description="Maximum number of attempts allowed for the user to get a valid response.")
+
+class UserQueryInput(BaseModel):
+    """
+    Model for user input.
+    """
+    user_input: str
+    """ The query input from the user to ask question about our AI mailroom. """
+    fname: Optional[str] = None
+    """ Optional first name of the user. """
+    lname: Optional[str] = None
+    """ Optional last name of the user. """
+    size: Optional[str] = None
+    """ Optional size of the package. """
+
