@@ -123,7 +123,7 @@ def setSessionError(session_id: str, error_msg: str) -> bool:
 
     return result.modified_count == 1
 
-def getFileBytesById(file_id) -> bytes | None:
+def getFileBytesById(file_id: ObjectId) -> bytes | None:
     buffer = io.BytesIO()
 
     try:
