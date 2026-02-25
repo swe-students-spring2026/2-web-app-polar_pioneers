@@ -17,9 +17,9 @@ class SessionStatus(Enum):
 
 class SessionInput(TypedDict):
     requested_at: datetime
+    job_description: str
     resume_file_name: str
     resume_file_id: ObjectId
-    job_description: str
 
 class SessionOutput(TypedDict):
     completed_at: datetime
@@ -65,9 +65,9 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
         "status": SessionStatus.PENDING,
         "input": {
             "requested_at": requested_at,
+            "job_description": job_description,
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
-            "job_description": job_description,
         },
         "output": None,
     }
