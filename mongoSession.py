@@ -1,4 +1,5 @@
 import pymongo
+from gridfs import GridFSBucket
 
 from datetime import datetime
 
@@ -35,6 +36,8 @@ class Session(TypedDict):
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["pdf_db"]
 sessions = db["sessions"]
+
+fs = GridFSBucket(db, bucket_name="resumes")
 
 sessions.create_index("session_id", unique=True)
 sessions.create_index([("user_id", 1), ("input.requested_at", -1)])
