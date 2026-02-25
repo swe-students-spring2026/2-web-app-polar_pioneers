@@ -71,8 +71,8 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
             case _:
                 return {"status": AddUserStatus.ERROR_UNKNOWN}
 
-def getUserById(id: str) -> User | None:
-    result = users.find_one({"user_id": id})
+def getUserById(user_id: str) -> User | None:
+    result = users.find_one({"user_id": user_id})
     if(result is None):
         return None
     return cast(User, result)

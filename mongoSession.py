@@ -76,8 +76,8 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
     sessions.insert_one(session)
     return session_id
 
-def getSessionById(id: str) -> Session | None:
-    result = sessions.find_one({"session_id": id})
+def getSessionById(session_id: str) -> Session | None:
+    result = sessions.find_one({"session_id": session_id})
     if(result is None):
         return None
     return cast(Session, result)
@@ -110,7 +110,7 @@ def completeSession(session_id: str, missing_skills, strongest_matches, suggeste
 
 def getFileBytesById(file_id) -> bytes | None:
     buffer = io.BytesIO()
-    
+
     try:
         fs.download_to_stream(ObjectId(file_id), buffer)
     except NoFile:
