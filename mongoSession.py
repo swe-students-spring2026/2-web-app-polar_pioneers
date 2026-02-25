@@ -92,7 +92,11 @@ def getMostRecentSessionByUserId(user_id: str) -> Session | None:
         return None
     return cast(Session, result)
 
-def getAllSessionsByStatus(user_id: str, status: SessionStatus) -> list[Session]:
+def getAllSessionsByUser(user_id: str) -> list[Session]:
+    results = list(sessions.find({"user_id": user_id}).sort("input.requested_at", -1))
+    return cast(list[Session], results)
+
+def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Session]:
     results = list(sessions.find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
     return cast(list[Session], results)
 
