@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}New Analysis — ResumeGo{% endblock %}
+
+{% block content %}
+<section class="page">
+  <h1 class="page-title">New Analysis</h1>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loading-overlay" style="display:none;">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <p class="loading-text">Running analysis…</p>
+      <p class="loading-sub">This may take a few seconds.</p>
+    </div>
+  </div>
+
+  <form method="POST" action="/runs/new" class="form" id="analysis-form" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+    <div class="form-group">
+      <label for="resume_file" class="form-label">Upload resume (PDF/DOCX) <span class="required">*</span></label>
+      <input type="file" id="resume_file" name="resume_file" class="form-input form-file" accept=".pdf,.docx,.doc,.txt" required>
+    </div>
+
+    <div class="form-group">
+      <label for="job_description" class="form-label">Job description <span class="required">*</span></label>
+      <textarea id="job_description" name="job_description" class="form-input form-textarea" rows="8" required placeholder="Paste the job posting here…" oninput="updateCounter(this, 'jd-counter', 10000)"></textarea>
+      <div class="form-row">
+        <span class="form-hint char-counter" id="jd-counter">0 / 10 000</span>
+        <button type="button" class="btn btn--text btn--sm" onclick="clearField('job_description')">Clear</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="company" class="form-label">Company</label>
+      <input type="text" id="company" name="company" class="form-input" placeholder="e.g. Google">
+    </div>
+
+    <div class="form-group">
+      <label for="role" class="form-label">Role / Title</label>
+      <input type="text" id="role" name="role" class="form-input" placeholder="e.g. Software Engineer">
+    </div>
+
+    <div class="form-group">
+      <label for="run_title" class="form-label">Analysis title</label>
+      <input type="text" id="run_title" name="title" class="form-input" placeholder="e.g. Google SWE — Jan 2025">
+    </div>
+
+    <div class="form-group">
+      <label for="notes" class="form-label">Notes</label>
+      <textarea id="notes" name="notes" class="form-input form-textarea" rows="3" placeholder="Any notes for yourself…"></textarea>
+    </div>
+
+    <div class="form-sticky-cta">
+      <button type="submit" class="btn btn--primary btn--lg btn--block" id="btn-run" onclick="showLoading()">Run analysis</button>
+      <button type="submit" name="action" value="draft" class="btn btn--secondary btn--lg btn--block">Save draft</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

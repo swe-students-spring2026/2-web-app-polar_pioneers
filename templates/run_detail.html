@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ run.title or 'Analysis' }} — ResumeGo{% endblock %}
+
+{% block content %}
+<section class="page">
+  <a href="/dashboard" class="back-link">← Back to dashboard</a>
+
+  <div class="run-header">
+    <div>
+      <h1 class="page-title" style="margin-bottom:.25rem;">{{ run.title or 'Untitled Analysis' }}</h1>
+      <div class="run-header-meta">
+        
+        <span class="run-header-date">{{ run.created_at }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score -->
+  <div class="score-hero">
+    <div class="score-hero-number score-color--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}">{{ run.score }}</div>
+    <p class="score-hero-label">Match Score</p>
+    <div class="score-bar">
+      <div class="score-bar-fill score-bar-fill--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}" style="width:{{ run.score }}%"></div>
+    </div>
+  </div>
+
+  <!-- Strengths -->
+  {% if run.strengths %}
+  <div class="result-card">
+    <h2 class="result-card-title">Strong Matches</h2>
+    <ul class="result-list">
+      {% for item in run.strengths %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Missing Skills -->
+  {% if run.missing_skills %}
+  <div class="result-card">
+    <h2 class="result-card-title">Missing Skills</h2>
+    <ul class="result-list result-list--warn">
+      {% for item in run.missing_skills %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Suggested Edits -->
+  {% if run.suggested_edits %}
+  <div class="result-card">
+    <h2 class="result-card-title">Suggested Edits</h2>
+    <ul class="result-list">
+      {% for item in run.suggested_edits %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- AI Insights -->
+  {% if run.insights %}
+  <div class="result-card">
+    <h2 class="result-card-title">AI Insights</h2>
+    {% if run.insights is string %}
+      <p class="result-paragraph">{{ run.insights }}</p>
+    {% else %}
+      <ul class="result-list">
+        {% for item in run.insights %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div class="detail-actions">
+    
+    
+    <a href="/runs/{{ run._id }}/delete" class="btn btn--danger-outline btn--block">Delete analysis</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyFeedback() {
+  var strengths = {{ run.strengths|tojson if run.strengths else '[]' }};
+  var missing = {{ run.missing_skills|tojson if run.missing_skills else '[]' }};
+  var edits = {{ run.suggested_edits|tojson if run.suggested_edits else '[]' }};
+  var text = 'Score: {{ run.score }}/100\n\n';
+  text += 'Strengths:\n' + strengths.map(function(s){return '• '+s}).join('\n') + '\n\n';
+  text += 'Missing Skills:\n' + missing.map(function(s){return '• '+s}).join('\n') + '\n\n';
+  text += 'Suggested Edits:\n' + edits.map(function(s){return '• '+s}).join('\n');
+  navigator.clipboard.writeText(text).then(function(){
+    showToast('Copied to clipboard!');
+  });
+}
+</script>
+{% endblock %}

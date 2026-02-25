@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Sign up — ResumeGo{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <h1 class="auth-title">Create your account</h1>
+  <p class="auth-subtitle">Start analyzing your resume in minutes</p>
+
+  <form method="POST" action="/signup" class="form" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+    <div class="form-group">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" required autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required autocomplete="new-password" minlength="8">
+      <span class="form-hint">At least 8 characters, include a number and a letter.</span>
+    </div>
+
+    <div class="form-group">
+      <label for="confirm_password" class="form-label">Confirm password</label>
+      <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="••••••••" required autocomplete="new-password">
+      <span class="form-error" id="password-match-error" style="display:none;">Passwords do not match.</span>
+    </div>
+
+    <button type="submit" class="btn btn--primary btn--lg btn--block">Create account</button>
+  </form>
+
+  <p class="auth-footer">
+    Already have an account? <a href="/login" class="link">Log in</a>
+  </p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelector('.form').addEventListener('submit', function(e) {
+    var pw = document.getElementById('password').value;
+    var cpw = document.getElementById('confirm_password').value;
+    var err = document.getElementById('password-match-error');
+    if (pw !== cpw) {
+      e.preventDefault();
+      err.style.display = 'block';
+    } else {
+      err.style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}
