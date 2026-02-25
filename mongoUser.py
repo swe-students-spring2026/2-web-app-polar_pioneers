@@ -77,13 +77,13 @@ def getUserById(id: str) -> User | None:
         return None
     return cast(User, result)
 
-def getUserByUsername(username: str):
+def getUserByUsername(username: str) -> User | None:
     result = users.find_one({"username": username})
     if(result is None):
         return None
     return cast(User, result)
 
-def getUserByEmail(email: str):
+def getUserByEmail(email: str) -> User | None:
     result = users.find_one({"email": email})
     if(result is None):
         return None
