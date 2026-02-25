@@ -1,6 +1,32 @@
 import pymongo
 from pymongo.errors import DuplicateKeyError
 
+from datetime import datetime
+import uuid
+import bcrypt
+
+from enum import Enum
+from typing import TypedDict
+from typing import cast
+
+class AddUserResult(Enum):
+    SUCCESS = 0
+    ERROR_UNKNOWN = 1
+    ERROR_EXISTS_USERNAME = 2
+    ERROR_EXISTS_EMAIL = 3
+
+class Name(TypedDict):
+    first: str
+    last: str
+
+class User(TypedDict):
+    user_id: str
+    username: str
+    password_digest: str
+    name: Name
+    email: str
+    date_joined: datetime
+
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["pdf_db"]
 users = db["users"]
@@ -9,22 +35,10 @@ users.create_index("user_id", unique=True)
 users.create_index("username", unique=True)
 users.create_index("email", unique=True)
 
-from datetime import datetime
-import uuid
-import bcrypt
-
 def hashPassword(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed.decode("utf-8")
-
-from enum import Enum
-
-class AddUserResult(Enum):
-    SUCCESS = 0
-    ERROR_UNKNOWN = 1
-    ERROR_EXISTS_USERNAME = 2
-    ERROR_EXISTS_EMAIL = 3
 
 def addUser(username: str, password: str, name_first: str, name_last: str, email: str) -> AddUserResult:
     user = {
@@ -51,21 +65,6 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
                 return AddUserResult.ERROR_EXISTS_EMAIL
             case _:
                 return AddUserResult.ERROR_UNKNOWN
-
-from typing import TypedDict
-from typing import cast
-
-class Name(TypedDict):
-    first: str
-    last: str
-
-class User(TypedDict):
-    user_id: str
-    username: str
-    password_digest: str
-    name: Name
-    email: str
-    date_joined: datetime
 
 def getUserById(id: str) -> User | None:
     result = users.find_one({"user_id": id})
