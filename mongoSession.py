@@ -32,4 +32,11 @@ class Session(TypedDict):
     input: SessionInput
     output: SessionOutput | None
 
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["pdf_db"]
+sessions = db["sessions"]
+
+sessions.create_index("session_id", unique=True)
+sessions.create_index([("user_id", 1), ("input.requested_at", -1)])
+sessions.create_index("input.resume_file_id")
 
