@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Delete Analysis — ResumeGo{% endblock %}
+
+{% block content %}
+<section class="page page--centered">
+  <div class="confirm-card">
+    
+    <h1 class="confirm-title">Delete this analysis?</h1>
+    <p class="confirm-text">This action <strong>cannot be undone</strong>.</p>
+
+    <div class="confirm-detail">
+      <p class="confirm-run-title">{{ run.title or 'Untitled' }}</p>
+      <p class="confirm-run-date">{{ run.created_at }}</p>
+    </div>
+
+    <form method="POST" action="/runs/{{ run._id }}/delete">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <button type="submit" class="btn btn--danger btn--lg btn--block">Delete permanently</button>
+    </form>
+    <a href="/runs/{{ run._id }}" class="btn btn--secondary btn--lg btn--block" style="margin-top:.75rem;">Cancel</a>
+  </div>
+</section>
+{% endblock %}

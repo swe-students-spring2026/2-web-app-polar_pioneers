@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Edit Analysis — ResumeGo{% endblock %}
+
+{% block content %}
+<section class="page">
+  <a href="/runs/{{ run._id }}" class="back-link">← Back to detail</a>
+  <h1 class="page-title">Edit Analysis</h1>
+
+  <form method="POST" action="/runs/{{ run._id }}/edit" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+    <div class="form-group">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" id="title" name="title" class="form-input" value="{{ run.title or '' }}">
+    </div>
+
+    <div class="form-group">
+      <label for="company" class="form-label">Company</label>
+      <input type="text" id="company" name="company" class="form-input" value="{{ run.company or '' }}">
+    </div>
+
+    <div class="form-group">
+      <label for="role" class="form-label">Role</label>
+      <input type="text" id="role" name="role" class="form-input" value="{{ run.role or '' }}">
+    </div>
+
+    <div class="form-group">
+      <label for="status" class="form-label">Status</label>
+      <select id="status" name="status" class="form-input form-select">
+        {% for s in ['Draft','Applied','Interview','Offer','Rejected'] %}
+          <option value="{{ s }}" {% if run.status == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="notes" class="form-label">Notes</label>
+      <textarea id="notes" name="notes" class="form-input form-textarea" rows="4">{{ run.notes or '' }}</textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary btn--lg btn--block">Save changes</button>
+      <a href="/runs/{{ run._id }}" class="btn btn--secondary btn--lg btn--block">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

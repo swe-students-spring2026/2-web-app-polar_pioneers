@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ResumeGo{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="page-header">
+    <h1 class="page-title">Your Analyses</h1>
+    <div class="page-actions"></div>
+  </div>
+
+  <a href="/runs/new" class="btn btn--primary btn--lg btn--block" style="margin-bottom:1.25rem;">
+    + Start new analysis
+  </a>
+
+  {% if runs and runs|length > 0 %}
+    <div class="run-list">
+      {% for run in runs %}
+      <article class="run-card">
+        <div class="run-card-top">
+          <div class="run-card-info">
+            <h2 class="run-card-title">
+              <a href="/runs/{{ run._id }}">{{ run.title or (run.company ~ ' — ' ~ run.role) or 'Untitled' }}</a>
+            </h2>
+            <span class="run-card-date">{{ run.created_at }}</span>
+          </div>
+          <div class="run-card-score score-badge">
+            {{ run.score }}
+          </div>
+        </div>
+
+
+        <div class="run-card-actions">
+          <a href="/runs/{{ run._id }}" class="btn btn--secondary btn--sm">View</a>
+          <a href="/runs/{{ run._id }}/edit" class="btn btn--secondary btn--sm">Edit</a>
+          <a href="/runs/{{ run._id }}/delete" class="btn btn--danger-outline btn--sm">Delete</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p class="empty-state-icon"></p>
+      <h2 class="empty-state-title">No analyses yet</h2>
+      <p class="empty-state-text">Run your first resume analysis to see how well you match a job.</p>
+      <a href="/runs/new" class="btn btn--primary btn--lg">Start new analysis</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

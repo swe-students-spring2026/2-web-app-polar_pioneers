@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}ResumeGo — AI Resume Analyzer{% endblock %}
+
+{% block header %}
+<header class="app-header app-header--transparent">
+  <div class="header-inner">
+    <a href="/" class="header-logo">
+      ResumeGo
+    </a>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<section class="landing">
+  <div class="landing-hero">
+    <h1 class="landing-title">Land the right job,<br><span class="text-accent">faster.</span></h1>
+    <p class="landing-subtitle">
+      AI-powered resume analysis that tells you exactly how well you match a job description — and what to fix.
+    </p>
+  </div>
+
+  <ul class="benefit-list">
+    <li class="benefit-item">
+      <div>
+        <strong>Instant match score</strong>
+        <p>See a 0–100 score comparing your resume to any job posting.</p>
+      </div>
+    </li>
+    <li class="benefit-item">
+      <div>
+        <strong>Spot skill gaps</strong>
+        <p>Know exactly which keywords and skills you're missing.</p>
+      </div>
+    </li>
+    <li class="benefit-item">
+      
+      <div>
+        <strong>Actionable suggestions</strong>
+        <p>Get line-by-line edits to strengthen your resume.</p>
+      </div>
+    </li>
+  </ul>
+
+  <div class="landing-cta">
+    <a href="/signup" class="btn btn--primary btn--lg btn--block">Sign up free</a>
+    <a href="/login" class="btn btn--secondary btn--lg btn--block">Log in</a>
+  </div>
+
+  
+</section>
+{% endblock %}
