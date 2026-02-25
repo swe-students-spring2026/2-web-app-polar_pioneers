@@ -32,4 +32,10 @@ async def ResumeGoRun(user_input: str):
 if __name__ == "__main__":
     import asyncio
     output = asyncio.run(ResumeGoRun("Give a rating of my resume as NYU supersmart student and intern of nvidia swe"))
+    #I used this fixed input for demo, it will later on be the AppState(check state.py) object that load the pdf from our frontend website
     print(output['result'])
+
+
+# to run this on your terminal: 
+# pipenv shell
+# pipenv run python appRun.py
