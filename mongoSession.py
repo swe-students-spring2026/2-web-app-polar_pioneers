@@ -47,7 +47,6 @@ sessions.create_index("input.resume_file_id")
 
 def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf") -> str:
     session_id = str(uuid.uuid4())
-    requested_at = datetime.now(datetime.timezone.utc)
 
     resume_file_id = fs.upload_from_stream(
         resume_file_name,
@@ -55,8 +54,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
         metadata = {
             "user_id": user_id,
             "session_id": session_id,
-            "content_type": resume_file_type,
-            "requested_at": requested_at,
+            "content_type": resume_file_type
         }
     )
 
@@ -65,7 +63,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
         "user_id": user_id,
         "status": SessionStatus.PENDING,
         "input": {
-            "requested_at": requested_at,
+            "requested_at": datetime.now(datetime.timezone.utc),
             "job_description": job_description,
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
