@@ -9,11 +9,15 @@ from enum import Enum
 from typing import TypedDict
 from typing import cast
 
-class AddUserResult(Enum):
+class AddUserStatus(Enum):
     SUCCESS = 0
     ERROR_UNKNOWN = 1
     ERROR_EXISTS_USERNAME = 2
     ERROR_EXISTS_EMAIL = 3
+
+class AddUserResult(TypedDict):
+    status: AddUserStatus
+    user_id: str | None # if status != SUCCESS, user_id = None
 
 class Name(TypedDict):
     first: str
@@ -41,8 +45,9 @@ def hashPassword(password: str) -> str:
     return hashed.decode("utf-8")
 
 def addUser(username: str, password: str, name_first: str, name_last: str, email: str) -> AddUserResult:
+    user_id = str(uuid.uuid4())
     user = {
-        "user_id": str(uuid.uuid4()),
+        "user_id": user_id,
         "username": username,
         "password_digest": hashPassword(password),
         "name": {
@@ -55,16 +60,16 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
 
     try:
         users.insert_one(user)
-        return AddUserResult.SUCCESS
+        return {"status": AddUserStatus.SUCCESS, "user_id": user_id}
     except DuplicateKeyError as e:
         field = list(e.details["keyPattern"].keys())[0]
         match field:
             case "username":
-                return AddUserResult.ERROR_EXISTS_USERNAME
+                return {"status": AddUserStatus.ERROR_EXISTS_USERNAME}
             case "email":
-                return AddUserResult.ERROR_EXISTS_EMAIL
+                return {"status": AddUserStatus.ERROR_EXISTS_EMAIL}
             case _:
-                return AddUserResult.ERROR_UNKNOWN
+                return {"status": AddUserStatus.ERROR_UNKNOWN}
 
 def getUserById(id: str) -> User | None:
     result = users.find_one({"user_id": id})
