@@ -18,6 +18,17 @@ class AddUserResult(TypedDict):
     status: AddUserStatus
     user_id: str | None # if status != SUCCESS, user_id = None
 
+class LoginStatus(Enum):
+    SUCCESS = 0
+    ERROR_UNKNOWN = 1
+    ERROR_EMAIL_NOT_FOUND = 2
+    ERROR_PASSWORD_INCORRECT = 2
+
+class LoginResult(TypedDict):
+    status: LoginStatus
+    user_id: str | None # if status != SUCCESS, user_id = None
+    login_session_id: str | None # if status != SUCCESS, loggin_session_id = None
+
 class User(TypedDict):
     user_id: str
     email: str
@@ -55,6 +66,28 @@ def addUser(email: str, password: str, title: str = "", company: str = "", role:
                 return {"status": AddUserStatus.ERROR_EXISTS_EMAIL}
             case _:
                 return {"status": AddUserStatus.ERROR_UNKNOWN}
+
+def login(email: str, password: str) -> LoginResult:
+    result = getCollectionUsers().find_one({"email": email})
+    if(result is None):
+        return {"status": LoginStatus.ERROR_EMAIL_NOT_FOUND}
+    user = cast(User, result)
+    
+    if(hashPassword(password) != user.password_digest):
+        return {"status": LoginStatus.ERROR_PASSWORD_INCORRECT}
+
+    login_session_id = str(uuid.uuid4())
+
+    result = getCollectionUsers().update_one(
+        {"user_id": user.user_id},
+        {"$set": {
+            "login_session_id": login_session_id
+        }}
+    )
+    if(result.modified_count != 1):
+        return {"status": LoginStatus.ERROR_UNKNOWN}
+    
+    return {"status": LoginStatus.SUCCESS, "user_id": user.user_id, "loggin_session_id": login_session_id}
 
 def getUserById(user_id: str) -> User | None:
     result = getCollectionUsers().find_one({"user_id": user_id})
