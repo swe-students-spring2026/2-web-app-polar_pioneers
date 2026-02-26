@@ -21,7 +21,6 @@ class ResumeAgent(GetLLM):
         chain = prompt_template | self.llm
         state.user_input = self.user_input
     
-        # formatted_prompt = prompt.format(user_request=UserInput)
     
         answer = await chain.ainvoke({"user_request": state.user_input})
 
@@ -32,5 +31,5 @@ class ResumeAgent(GetLLM):
     async def __call__(self, state):
         return await self.run(state)
     
-    # ResumeAgent("How is this resume?")
+    # ResumeAgent("How is this resume?") example question for agent
 

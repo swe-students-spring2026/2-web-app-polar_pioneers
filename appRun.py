@@ -14,23 +14,13 @@ async def ResumeGoRun(user_input: str):
         ),
         user_input=user_input,
     )
-    # checkerNode = OutputChecker(prompt=CHECKER_PROMPT)
+
     
     workflow = StateGraph(AppState)
     workflow.add_node("chat", agentNode)
 
   
     workflow.add_edge(START, "chat")
-
-    # workflow.add_conditional_edges(
-    #     "verify", 
-    #     router, 
-    #     {
-    #         "display": "display",
-    #         "client": "client"
-    #     }
-    # )
-    # # workflow.set_finish_point(END)  # <-- Add this line
     workflow.add_edge("chat", END)
    
    
@@ -39,7 +29,7 @@ async def ResumeGoRun(user_input: str):
     
 if __name__ == "__main__":
     import asyncio
-    output = asyncio.run(ResumeGoRun("Give a rating of my resume as NYU supersmart student and intern at nvidia before for software engineer. Also, I have 3 AI robotic labs experiences."))
+    output = asyncio.run(ResumeGoRun("Give a rating(100 points scale)of my resume as NYU supersmart student and intern at nvidia before for software engineer. Also, I have 3 AI robotic labs experiences."))
     #I used this fixed input for demo, it will later on be the AppState(check state.py) object that load the pdf from our frontend website
     print(output['result'])
 

@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
 class AppState(BaseModel):
     """
-    State model for the AI Mailroom system.
+    State model for the AI ResumeGo system.
     """
 
     user_input: str
@@ -21,16 +21,4 @@ class AppState(BaseModel):
 
     maxtry: Optional[int] = Field(default=5, description="Maximum number of attempts allowed for the user to get a valid response.")
 
-class UserQueryInput(BaseModel):
-    """
-    Model for user input.
-    """
-    user_input: str
-    """ The query input from the user to ask question about our AI mailroom. """
-    fname: Optional[str] = None
-    """ Optional first name of the user. """
-    lname: Optional[str] = None
-    """ Optional last name of the user. """
-    size: Optional[str] = None
-    """ Optional size of the package. """
 
