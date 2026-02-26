@@ -12,7 +12,7 @@ from typing import cast
 class AddUserStatus(Enum):
     SUCCESS = 0
     ERROR_UNKNOWN = 1
-    ERROR_EXISTS_EMAIL = 2
+    ERROR_EMAIL_EXISTS_ALREADY = 2
 
 class AddUserResult(TypedDict):
     status: AddUserStatus
@@ -63,7 +63,7 @@ def addUser(email: str, password: str, title: str = "", company: str = "", role:
         field = list(e.details["keyPattern"].keys())[0]
         match field:
             case "email":
-                return {"status": AddUserStatus.ERROR_EXISTS_EMAIL}
+                return {"status": AddUserStatus.ERROR_EMAIL_EXISTS_ALREADY}
             case _:
                 return {"status": AddUserStatus.ERROR_UNKNOWN}
 
