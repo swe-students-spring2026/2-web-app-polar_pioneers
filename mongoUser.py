@@ -1,4 +1,4 @@
-import pymongo
+from mongo import getCollectionUsers
 from pymongo.errors import DuplicateKeyError
 
 from datetime import datetime
@@ -28,14 +28,6 @@ class User(TypedDict):
     email: str
     date_joined: datetime
 
-client = pymongo.MongoClient("mongodb://localhost:27017/")
-db = client["pdf_db"]
-users = db["users"]
-
-users.create_index("user_id", unique=True)
-users.create_index("username", unique=True)
-users.create_index("email", unique=True)
-
 def hashPassword(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
@@ -54,7 +46,7 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
     }
 
     try:
-        users.insert_one(user)
+        getCollectionUsers().insert_one(user)
         return {"status": AddUserStatus.SUCCESS, "user_id": user_id}
     except DuplicateKeyError as e:
         field = list(e.details["keyPattern"].keys())[0]
@@ -67,19 +59,19 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
                 return {"status": AddUserStatus.ERROR_UNKNOWN}
 
 def getUserById(user_id: str) -> User | None:
-    result = users.find_one({"user_id": user_id})
+    result = getCollectionUsers().find_one({"user_id": user_id})
     if(result is None):
         return None
     return cast(User, result)
 
 def getUserByUsername(username: str) -> User | None:
-    result = users.find_one({"username": username})
+    result = getCollectionUsers().find_one({"username": username})
     if(result is None):
         return None
     return cast(User, result)
 
 def getUserByEmail(email: str) -> User | None:
-    result = users.find_one({"email": email})
+    result = getCollectionUsers().find_one({"email": email})
     if(result is None):
         return None
     return cast(User, result)

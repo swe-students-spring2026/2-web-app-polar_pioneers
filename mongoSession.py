@@ -1,6 +1,6 @@
-import pymongo
 from gridfs import GridFSBucket
 from gridfs.errors import NoFile
+from mongo import getCollectionSessions, getBucketResumes
 
 from datetime import datetime
 import uuid
@@ -38,21 +38,10 @@ class Session(TypedDict):
     input: SessionInput
     output: SessionOutput | None
 
-client = pymongo.MongoClient("mongodb://localhost:27017/")
-db = client["pdf_db"]
-sessions = db["sessions"]
-
-fs = GridFSBucket(db, bucket_name="resumes")
-
-sessions.create_index("session_id", unique=True)
-sessions.create_index([("user_id", 1), ("input.requested_at", -1)])
-sessions.create_index([("user_id", 1), ("status", 1), ("input.requested_at", -1)])
-sessions.create_index("input.resume_file_id")
-
 def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf") -> str:
     session_id = str(uuid.uuid4())
 
-    resume_file_id = fs.upload_from_stream(
+    resume_file_id = getBucketResumes().upload_from_stream(
         resume_file_name,
         resume_file_bytes,
         metadata = {
@@ -77,31 +66,31 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
         "output": None
     }
 
-    sessions.insert_one(session)
+    getCollectionSessions().insert_one(session)
     return session_id
 
 def getSessionById(session_id: str) -> Session | None:
-    result = sessions.find_one({"session_id": session_id})
+    result = getCollectionSessions().find_one({"session_id": session_id})
     if(result is None):
         return None
     return cast(Session, result)
 
 def getMostRecentSessionByUserId(user_id: str) -> Session | None:
-    result = sessions.find_one({"user_id": user_id}, sort=[("input.requested_at", -1)])
+    result = getCollectionSessions().find_one({"user_id": user_id}, sort=[("input.requested_at", -1)])
     if(result is None):
         return None
     return cast(Session, result)
 
 def getAllSessionsByUser(user_id: str) -> list[Session]:
-    results = list(sessions.find({"user_id": user_id}).sort("input.requested_at", -1))
+    results = list(getCollectionSessions().find({"user_id": user_id}).sort("input.requested_at", -1))
     return cast(list[Session], results)
 
 def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Session]:
-    results = list(sessions.find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
+    results = list(getCollectionSessions().find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
     return cast(list[Session], results)
 
 def completeSession(session_id: str, missing_skills, strongest_matches, suggested_edits) -> bool:
-    result = sessions.update_one(
+    result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
             "status": SessionStatus.COMPLETE,
@@ -117,7 +106,7 @@ def completeSession(session_id: str, missing_skills, strongest_matches, suggeste
     return result.modified_count == 1
 
 def setSessionError(session_id: str, error_msg: str) -> bool:
-    result = sessions.update_one(
+    result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
             "status": SessionStatus.ERROR,
@@ -131,7 +120,7 @@ def getFileBytesById(file_id: ObjectId) -> bytes | None:
     buffer = io.BytesIO()
 
     try:
-        fs.download_to_stream(ObjectId(file_id), buffer)
+        getBucketResumes().download_to_stream(ObjectId(file_id), buffer)
     except NoFile:
         return None
 
