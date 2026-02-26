@@ -1,6 +1,5 @@
-from gridfs import GridFSBucket
-from gridfs.errors import NoFile
 from mongo import getCollectionSessions, getBucketResumes
+from gridfs.errors import NoFile
 
 from datetime import datetime
 import uuid
