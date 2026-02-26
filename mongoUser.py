@@ -12,8 +12,7 @@ from typing import cast
 class AddUserStatus(Enum):
     SUCCESS = 0
     ERROR_UNKNOWN = 1
-    ERROR_EXISTS_USERNAME = 2
-    ERROR_EXISTS_EMAIL = 3
+    ERROR_EXISTS_EMAIL = 2
 
 class AddUserResult(TypedDict):
     status: AddUserStatus
@@ -21,28 +20,29 @@ class AddUserResult(TypedDict):
 
 class User(TypedDict):
     user_id: str
-    username: str
-    password_digest: str
-    name_first: str
-    name_last: str
     email: str
-    date_joined: datetime
+    password_digest: str
+    title: str
+    company: str
+    role: str
+    notes: str
+    login_session_id: str
 
 def hashPassword(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed.decode("utf-8")
 
-def addUser(username: str, password: str, name_first: str, name_last: str, email: str) -> AddUserResult:
+def addUser(email: str, password: str, title: str = "", company: str = "", role: str = "", notes: str = "") -> AddUserResult:
     user_id = str(uuid.uuid4())
     user = {
         "user_id": user_id,
-        "username": username,
-        "password_digest": hashPassword(password),
-        "name_first": name_first,
-        "name_last": name_last,
         "email": email,
-        "date_joined": datetime.now(datetime.timezone.utc)
+        "password_digest": hashPassword(password),
+        "title": title,
+        "company": company,
+        "role": role,
+        "notes": notes
     }
 
     try:
@@ -51,8 +51,6 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
     except DuplicateKeyError as e:
         field = list(e.details["keyPattern"].keys())[0]
         match field:
-            case "username":
-                return {"status": AddUserStatus.ERROR_EXISTS_USERNAME}
             case "email":
                 return {"status": AddUserStatus.ERROR_EXISTS_EMAIL}
             case _:
@@ -60,12 +58,6 @@ def addUser(username: str, password: str, name_first: str, name_last: str, email
 
 def getUserById(user_id: str) -> User | None:
     result = getCollectionUsers().find_one({"user_id": user_id})
-    if(result is None):
-        return None
-    return cast(User, result)
-
-def getUserByUsername(username: str) -> User | None:
-    result = getCollectionUsers().find_one({"username": username})
     if(result is None):
         return None
     return cast(User, result)
