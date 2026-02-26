@@ -9,7 +9,7 @@ client: MongoClient | None = None
 db: Database | None = None
 resumes: GridFSBucket | None = None
 
-def initMongo(db_uri, db_name):
+def initMongo(db_uri: str, db_name: str):
     global INITIALIZED, client, db, resumes
 
     if(INITIALIZED): return
