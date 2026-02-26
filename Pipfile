@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 pymongo = "==4.6.0"
 flask = "==2.2.3"
+werkzeug = "==2.2.3"
 python-dotenv = "==1.0.0"
 flask-login = "==0.6.3"
 langchain = "*"
