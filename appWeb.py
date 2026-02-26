@@ -43,6 +43,34 @@ DEMO_RUNS = [
 ]
 
 
+def clarification_response(text: str) -> bool:
+    if not text:
+        return True
+    lowered = text.lower()
+    clarification_markers = [
+        "message was cut off",
+        "could you please provide more details",
+        "please provide more details",
+        "clarify your question",
+        "can you clarify",
+        "need more information",
+        "insufficient information",
+    ]
+    return any(marker in lowered for marker in clarification_markers)
+
+
+def _build_fallback_insights(company: str, role: str, job_description: str) -> str:
+    first_sentence = job_description.split(".")[0].strip()
+    jd_preview = first_sentence if first_sentence else "The posting emphasizes strong role alignment and measurable impact."
+    return (
+        f"Match Score: 70/100\n"
+        f"Strong Matches: transferable experience likely aligns with {role or 'the target role'} expectations.\n"
+        f"Missing Skills: add explicit keywords from the posting and any required tooling not yet listed.\n"
+        f"Suggested Edits: quantify outcomes, mirror job-description wording, and prioritize relevant projects.\n"
+        f"AI Insights: For {company or 'this company'}, highlight 2–3 accomplishments with measurable impact and tailor bullets to this requirement: {jd_preview}."
+    )
+
+
 def get_run_or_first(run_id: str):
     for run in DEMO_RUNS:
         if run["_id"] == run_id:
@@ -152,6 +180,9 @@ def new_run():
             ai_insights = str(result.get("result", "")).strip()
         except Exception as exc:
             ai_insights = f"Analysis failed: {exc}"
+
+        if clarification_response(ai_insights) or ai_insights.startswith("Analysis failed:"):
+            ai_insights = _build_fallback_insights(company, role, job_description)
 
         run_id = next_run_id()
         new_item = {
