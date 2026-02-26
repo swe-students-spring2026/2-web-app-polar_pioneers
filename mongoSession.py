@@ -22,12 +22,15 @@ class SessionInput(TypedDict):
     resume_file_name: str
     resume_file_id: ObjectId
     resume_file_type: str
+    notes: str
 
 class SessionOutput(TypedDict):
     completed_at: datetime
-    missing_skills: list[str] # TODO: may change type later
-    strongest_matches: list[str] # TODO: may change type later
-    suggested_edits: list[str] # TODO: may change type later
+    match_score: int
+    strong_matches: list[str]
+    missing_skills: list[str]
+    suggested_edits: list[str]
+    ai_insights: list[str]
 
 class Session(TypedDict):
     session_id: str
@@ -37,7 +40,7 @@ class Session(TypedDict):
     input: SessionInput
     output: SessionOutput | None
 
-def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf") -> str:
+def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf", notes: str = "") -> str:
     session_id = str(uuid.uuid4())
 
     resume_file_id = getBucketResumes().upload_from_stream(
@@ -60,7 +63,8 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
             "job_description": job_description,
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
-            "resume_file_type": resume_file_type
+            "resume_file_type": resume_file_type,
+            "notes": notes
         },
         "output": None
     }
@@ -88,17 +92,18 @@ def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Se
     results = list(getCollectionSessions().find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
     return cast(list[Session], results)
 
-# TODO: figure out types of missing_skills, strongest_matches, suggested_edits
-def completeSession(session_id: str, missing_skills, strongest_matches, suggested_edits) -> bool:
+def completeSession(session_id: str, match_score: int, strong_matches: list[str], missing_skills: list[str], suggested_edits: list[str], ai_insights: list[str]) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
             "status": SessionStatus.COMPLETE,
             "output": {
                 "completed_at": datetime.now(datetime.timezone.utc),
+                "match_score": match_score,
+                "strong_matches": strong_matches,
                 "missing_skills": missing_skills,
-                "strongest_matches": strongest_matches,
-                "suggested_edits": suggested_edits
+                "suggested_edits": suggested_edits,
+                "ai_insights": ai_insights
             }
         }}
     )
