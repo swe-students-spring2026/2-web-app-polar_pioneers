@@ -1,7 +1,7 @@
 import pymongo
 import gridfs
 from bson import ObjectId
-client=pymongo.MongoClient("mongodb://localhost:27017/")
+client=pymongo.MongoClient("mongodb://localhost:8000/")
 db = client["pdf_db"]
 gridObject=gridfs.GridFS(db)
 fileHandle=open("file_id.txt","rb")
