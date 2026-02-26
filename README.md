@@ -4,7 +4,7 @@ A little exercise to build a web application following an agile development proc
 
 ## Product vision statement
 
-See instructions. Delete this line and place the Product Vision Statement here.
+ResumeGo enables job applicants to improve their chances of landing interviews by providing AI-driven resume analysis, personalized feedback, and resume match score against job descriptions. 
 
 ## User stories
 
