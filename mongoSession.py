@@ -89,6 +89,7 @@ def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Se
     results = list(getCollectionSessions().find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
     return cast(list[Session], results)
 
+# TODO: figure out types of missing_skills, strongest_matches, suggested_edits
 def completeSession(session_id: str, missing_skills, strongest_matches, suggested_edits) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
