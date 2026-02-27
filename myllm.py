@@ -23,8 +23,8 @@ class GetLLM:
     def get_llm(self):
         if self.provider == 'openai':
             llm = self.get_openai_instance()
-        elif self.provider == 'gemini':
-            llm = self.get_gemini_instance()
+        else:
+            print("No llm model found")
 
         return llm
 
@@ -36,7 +36,3 @@ class GetLLM:
             api_key=os.getenv("OPENAI_API_KEY")
         )
     
-    def get_gemini_instance(self):
-        """Get an instance of the Gemini LLM."""
-        # Placeholder for Gemini LLM instance creation
-        pass
