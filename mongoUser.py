@@ -92,7 +92,16 @@ def login(email: str, password: str) -> LoginResult:
     
     return {"status": LoginStatus.SUCCESS, "user_id": user["user_id"], "login_session_id": login_session_id}
 
-# TODO: validateUserSession    
+def validateUserLoginSession(user_id: str, login_session_id: str) -> bool:
+    result = getCollectionUsers().find_one({"user_id": user_id})
+    if(result is None):
+        return False
+    user = cast(User, result)
+
+    if(login_session_id != user["login_session_id"]):
+        return False
+    
+    return True
 
 def getUserById(user_id: str) -> User | None:
     result = getCollectionUsers().find_one({"user_id": user_id})
