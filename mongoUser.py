@@ -56,7 +56,8 @@ def addUser(email: str, password: str, title: str = "", company: str = "", role:
         "title": title,
         "company": company,
         "role": role,
-        "notes": notes
+        "notes": notes,
+        "login_session_id": str(uuid.uuid4()) # set to random initially (before first login)
     }
 
     try:
