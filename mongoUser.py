@@ -22,7 +22,7 @@ class LoginStatus(Enum):
     SUCCESS = 0
     ERROR_UNKNOWN = 1
     ERROR_EMAIL_NOT_FOUND = 2
-    ERROR_PASSWORD_INCORRECT = 2
+    ERROR_PASSWORD_INCORRECT = 3
 
 class LoginResult(TypedDict):
     status: LoginStatus
