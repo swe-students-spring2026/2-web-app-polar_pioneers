@@ -2,6 +2,7 @@ from mongo import getCollectionSessions, getBucketResumes
 from gridfs.errors import NoFile
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import uuid
 import io
 
@@ -59,7 +60,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
         "status": SessionStatus.PENDING,
         "error_msg": None,
         "input": {
-            "requested_at": datetime.now(datetime.timezone.utc),
+            "requested_at": datetime.now(ZoneInfo("America/New_York")),
             "job_description": job_description,
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
@@ -98,7 +99,7 @@ def completeSession(session_id: str, match_score: int, strong_matches: list[str]
         {"$set": {
             "status": SessionStatus.COMPLETE,
             "output": {
-                "completed_at": datetime.now(datetime.timezone.utc),
+                "completed_at": datetime.now(ZoneInfo("America/New_York")),
                 "match_score": match_score,
                 "strong_matches": strong_matches,
                 "missing_skills": missing_skills,
