@@ -2,6 +2,7 @@ from mongo import getCollectionSessions, getBucketResumes
 from gridfs.errors import NoFile
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import uuid
 import io
 
@@ -22,12 +23,15 @@ class SessionInput(TypedDict):
     resume_file_name: str
     resume_file_id: ObjectId
     resume_file_type: str
+    notes: str
 
 class SessionOutput(TypedDict):
     completed_at: datetime
-    missing_skills: list[str] # TODO: may change type later
-    strongest_matches: list[str] # TODO: may change type later
-    suggested_edits: list[str] # TODO: may change type later
+    match_score: int
+    strong_matches: list[str]
+    missing_skills: list[str]
+    suggested_edits: list[str]
+    ai_insights: list[str]
 
 class Session(TypedDict):
     session_id: str
@@ -37,7 +41,29 @@ class Session(TypedDict):
     input: SessionInput
     output: SessionOutput | None
 
-def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf") -> str:
+def _castToSession(session: dict) -> Session | None:
+    status = session["status"]
+    match status:
+        case "PENDING":
+            session["status"] = SessionStatus.PENDING
+        case "COMPLETE":
+            session["status"] = SessionStatus.COMPLETE
+        case "ERROR":
+            session["status"] = SessionStatus.ERROR
+        case _:
+            return None
+    
+    return cast(Session, session)
+
+def _castToSessionList(sessions: list[dict]) -> list[Session]:
+    sessions_new = []
+    for s in sessions:
+        session = _castToSession(s)
+        if(session is not None):
+            sessions_new.append(session)
+    return sessions_new
+
+def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf", notes: str = "") -> str:
     session_id = str(uuid.uuid4())
 
     resume_file_id = getBucketResumes().upload_from_stream(
@@ -53,14 +79,15 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
     session = {
         "session_id": session_id,
         "user_id": user_id,
-        "status": SessionStatus.PENDING,
+        "status": SessionStatus.PENDING.name,
         "error_msg": None,
         "input": {
-            "requested_at": datetime.now(datetime.timezone.utc),
+            "requested_at": datetime.now(ZoneInfo("America/New_York")),
             "job_description": job_description,
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
-            "resume_file_type": resume_file_type
+            "resume_file_type": resume_file_type,
+            "notes": notes
         },
         "output": None
     }
@@ -72,33 +99,34 @@ def getSessionById(session_id: str) -> Session | None:
     result = getCollectionSessions().find_one({"session_id": session_id})
     if(result is None):
         return None
-    return cast(Session, result)
+    return _castToSession(result)
 
 def getMostRecentSessionByUserId(user_id: str) -> Session | None:
     result = getCollectionSessions().find_one({"user_id": user_id}, sort=[("input.requested_at", -1)])
     if(result is None):
         return None
-    return cast(Session, result)
+    return _castToSession(result)
 
 def getAllSessionsByUser(user_id: str) -> list[Session]:
     results = list(getCollectionSessions().find({"user_id": user_id}).sort("input.requested_at", -1))
-    return cast(list[Session], results)
+    return _castToSessionList(results)
 
 def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Session]:
-    results = list(getCollectionSessions().find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
-    return cast(list[Session], results)
+    results = list(getCollectionSessions().find({"user_id": user_id, "status": status.name}).sort("input.requested_at", -1))
+    return _castToSessionList(results)
 
-# TODO: figure out types of missing_skills, strongest_matches, suggested_edits
-def completeSession(session_id: str, missing_skills, strongest_matches, suggested_edits) -> bool:
+def completeSession(session_id: str, match_score: int, strong_matches: list[str], missing_skills: list[str], suggested_edits: list[str], ai_insights: list[str]) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
-            "status": SessionStatus.COMPLETE,
+            "status": SessionStatus.COMPLETE.name,
             "output": {
-                "completed_at": datetime.now(datetime.timezone.utc),
+                "completed_at": datetime.now(ZoneInfo("America/New_York")),
+                "match_score": match_score,
+                "strong_matches": strong_matches,
                 "missing_skills": missing_skills,
-                "strongest_matches": strongest_matches,
-                "suggested_edits": suggested_edits
+                "suggested_edits": suggested_edits,
+                "ai_insights": ai_insights
             }
         }}
     )
@@ -109,7 +137,7 @@ def setSessionError(session_id: str, error_msg: str) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
-            "status": SessionStatus.ERROR,
+            "status": SessionStatus.ERROR.name,
             "error_msg": error_msg
         }}
     )

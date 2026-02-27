@@ -19,7 +19,6 @@ def initMongo(db_uri: str, db_name: str):
 
     users = db["users"]
     users.create_index("user_id", unique=True)
-    users.create_index("username", unique=True)
     users.create_index("email", unique=True)
 
     sessions = db["sessions"]
