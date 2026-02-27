@@ -89,6 +89,8 @@ def login(email: str, password: str) -> LoginResult:
     
     return {"status": LoginStatus.SUCCESS, "user_id": user.user_id, "loggin_session_id": login_session_id}
 
+# TODO: validateUserSession    
+
 def getUserById(user_id: str) -> User | None:
     result = getCollectionUsers().find_one({"user_id": user_id})
     if(result is None):
