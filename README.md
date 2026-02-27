@@ -8,7 +8,9 @@ ResumeGo enables job applicants to improve their chances of landing interviews b
 
 ## User stories
 
-See instructions. Delete this line and place a link to the user stories here.
+1. As an applicant for the job market, I want an AI software that can be my personal consultant on my resume and give me unlimited feedback.
+2. As an applicant, I want there to be an Agentic AI service that help me to enhance my resume, background prepping, and gives professional advise on where can be done better.
+3. As an applicant, I want a AI resume consultant website that help me analyze my resume and give professional suggestions then store all my resume analysis for different companies.
 
 ## Steps necessary to run the software
 
