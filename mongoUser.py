@@ -73,13 +73,13 @@ def login(email: str, password: str) -> LoginResult:
         return {"status": LoginStatus.ERROR_EMAIL_NOT_FOUND}
     user = cast(User, result)
     
-    if(hashPassword(password) != user.password_digest):
+    if(hashPassword(password) != user["password_digest"]):
         return {"status": LoginStatus.ERROR_PASSWORD_INCORRECT}
 
     login_session_id = str(uuid.uuid4())
 
     result = getCollectionUsers().update_one(
-        {"user_id": user.user_id},
+        {"user_id": user["user_id"]},
         {"$set": {
             "login_session_id": login_session_id
         }}
@@ -87,7 +87,7 @@ def login(email: str, password: str) -> LoginResult:
     if(result.modified_count != 1):
         return {"status": LoginStatus.ERROR_UNKNOWN}
     
-    return {"status": LoginStatus.SUCCESS, "user_id": user.user_id, "loggin_session_id": login_session_id}
+    return {"status": LoginStatus.SUCCESS, "user_id": user["user_id"], "loggin_session_id": login_session_id}
 
 # TODO: validateUserSession    
 
