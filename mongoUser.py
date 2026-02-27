@@ -27,7 +27,7 @@ class LoginStatus(Enum):
 class LoginResult(TypedDict):
     status: LoginStatus
     user_id: str | None # if status != SUCCESS, user_id = None
-    login_session_id: str | None # if status != SUCCESS, loggin_session_id = None
+    login_session_id: str | None # if status != SUCCESS, login_session_id = None
 
 class User(TypedDict):
     user_id: str
@@ -90,7 +90,7 @@ def login(email: str, password: str) -> LoginResult:
     if(result.modified_count != 1):
         return {"status": LoginStatus.ERROR_UNKNOWN}
     
-    return {"status": LoginStatus.SUCCESS, "user_id": user["user_id"], "loggin_session_id": login_session_id}
+    return {"status": LoginStatus.SUCCESS, "user_id": user["user_id"], "login_session_id": login_session_id}
 
 # TODO: validateUserSession    
 
