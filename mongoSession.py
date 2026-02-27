@@ -73,25 +73,47 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
     getCollectionSessions().insert_one(session)
     return session_id
 
+def _castToSession(session: dict) -> Session | None:
+    status = session["status"]
+    match status:
+        case "PENDING":
+            session["status"] = SessionStatus.PENDING
+        case "COMPLETE":
+            session["status"] = SessionStatus.COMPLETE
+        case "ERROR":
+            session["status"] = SessionStatus.ERROR
+        case _:
+            return None
+    
+    return cast(Session, session)
+
+def _castToSessionList(sessions: list[dict]) -> list[Session]:
+    sessions_new = []
+    for s in sessions:
+        session = _castToSession(s)
+        if(session is not None):
+            sessions_new.append(session)
+    return sessions_new
+
 def getSessionById(session_id: str) -> Session | None:
     result = getCollectionSessions().find_one({"session_id": session_id})
     if(result is None):
         return None
-    return cast(Session, result)
+    return _castToSession(result)
 
 def getMostRecentSessionByUserId(user_id: str) -> Session | None:
     result = getCollectionSessions().find_one({"user_id": user_id}, sort=[("input.requested_at", -1)])
     if(result is None):
         return None
-    return cast(Session, result)
+    return _castToSession(result)
 
 def getAllSessionsByUser(user_id: str) -> list[Session]:
     results = list(getCollectionSessions().find({"user_id": user_id}).sort("input.requested_at", -1))
-    return cast(list[Session], results)
+    return _castToSessionList(results)
 
 def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Session]:
-    results = list(getCollectionSessions().find({"user_id": user_id, "status": status}).sort("input.requested_at", -1))
-    return cast(list[Session], results)
+    results = list(getCollectionSessions().find({"user_id": user_id, "status": status.name}).sort("input.requested_at", -1))
+    return _castToSessionList(results)
 
 def completeSession(session_id: str, match_score: int, strong_matches: list[str], missing_skills: list[str], suggested_edits: list[str], ai_insights: list[str]) -> bool:
     result = getCollectionSessions().update_one(
