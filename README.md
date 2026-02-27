@@ -15,11 +15,34 @@ ResumeGo enables job applicants to improve their chances of landing interviews b
 5. As a job applicant, I want to delete past analyses so that I can keep my dashboard organized.
 6. As a job applicant, I want to receive actionable suggestions for improving my resume so that I can tailor it more effectively.
 7. As a job applicant, I want to upload my resume as a file so that the system can analyze it against job descriptions.
-8.
+8. As a job applicant, I want each analysis to be saved so that I can track my applications over time.
+9. As a job applicant, I want to see my strongest matches and missing skills so that I understand my strengths and weaknesses.
+10. As a job applicant, I want to receive a resume score so that I can understand how competitive my resume is for the role.
+11. As a job applicant, I want to upload a job description so that I can evaluate how well my resume matches against that specific role.
+
 
 ## Steps necessary to run the software
 
-See instructions. Delete this line and place instructions to download, configure, and run the software here.
+**Install dependencies**
+   - Make sure you have Python 3.10+ installed.
+   - Install Pipenv (if not already installed):
+     ```bash
+     pip install pipenv
+
+**Run your pipenv**
+   Activation: pipenv shell
+
+
+**Run the Flask app**
+   
+   pipenv run flask --app appWeb run --debug
+   
+   Then, Click the URL shown in terminal (usually `http://127.0.0.1:5000`).
+**To play with our ResumeAgent**
+   Go to appRun.py and type: pipenv run python appRun.py
+
+
+
 
 ## Task boards
 
