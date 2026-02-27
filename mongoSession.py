@@ -57,7 +57,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
     session = {
         "session_id": session_id,
         "user_id": user_id,
-        "status": SessionStatus.PENDING,
+        "status": SessionStatus.PENDING.name,
         "error_msg": None,
         "input": {
             "requested_at": datetime.now(ZoneInfo("America/New_York")),
@@ -97,7 +97,7 @@ def completeSession(session_id: str, match_score: int, strong_matches: list[str]
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
-            "status": SessionStatus.COMPLETE,
+            "status": SessionStatus.COMPLETE.name,
             "output": {
                 "completed_at": datetime.now(ZoneInfo("America/New_York")),
                 "match_score": match_score,
@@ -115,7 +115,7 @@ def setSessionError(session_id: str, error_msg: str) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
-            "status": SessionStatus.ERROR,
+            "status": SessionStatus.ERROR.name,
             "error_msg": error_msg
         }}
     )
