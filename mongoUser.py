@@ -44,6 +44,9 @@ def hashPassword(password: str) -> str:
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed.decode("utf-8")
 
+def checkPassword(password: str, password_digest: str):
+    return bcrypt.checkpw(password.encode("utf-8"), password_digest.encode("utf-8"))
+
 def addUser(email: str, password: str, title: str = "", company: str = "", role: str = "", notes: str = "") -> AddUserResult:
     user_id = str(uuid.uuid4())
     user = {
@@ -73,7 +76,7 @@ def login(email: str, password: str) -> LoginResult:
         return {"status": LoginStatus.ERROR_EMAIL_NOT_FOUND}
     user = cast(User, result)
     
-    if(hashPassword(password) != user["password_digest"]):
+    if(not checkPassword(password, user["password_digest"])):
         return {"status": LoginStatus.ERROR_PASSWORD_INCORRECT}
 
     login_session_id = str(uuid.uuid4())
