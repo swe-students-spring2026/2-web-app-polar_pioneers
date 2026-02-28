@@ -109,7 +109,6 @@ def login():
         if not email or not password:
             return render_template("login.html")
         result = mongoUser.login(email=email,password=password)
-        result = mongoUser.login(email=email, password=password)
         #check if the login is successful
         if result["status"] == mongoUser.LoginStatus.ERROR_USER_NOT_FOUND:
             return render_template("login.html")
