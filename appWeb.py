@@ -170,7 +170,7 @@ def new_run():
 
             uploaded_file = request.files.get("resume_file")
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
-            resume_pdf_bytes = uploaded_file.read() if uploaded_file else None
+            resume_pdf_bytes = uploaded_file.read() 
             extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
 
             result = asyncio.run(

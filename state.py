@@ -15,7 +15,6 @@ class AppState(BaseModel):
     """this is just the file name of the resume on user_input, don't have to affect the analysis, just store it here"""
     resume_pdf_bytes: bytes | None = None
     """This is the raw pdf bytes for storage and reuse. Just in case."""
-
     notes: str | None = None
     """This can be any notes that the user personally wants you to consider in the resume consulting analysis."""
     result: str | None = None

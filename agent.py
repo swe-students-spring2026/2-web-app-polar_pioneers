@@ -5,7 +5,7 @@ from state import AppState
 
 class ResumeAgent(GetLLM):
 
-    def __init__(self, prompt: str):
+    def __init__(self, prompt: str, state:AppState):
         super().__init__(prompt=prompt)
         self.llm = self.get_llm()
 
@@ -30,17 +30,18 @@ class ResumeAgent(GetLLM):
 
         chain = prompt_template | self.llm
 
-        # Normalize and store defaults directly on state for consistent downstream usage.
-        state.user_input = state.user_input or ""
-        state.resume_file_name = state.resume_file_name or "Not provided"
-        state.notes = state.notes or "None"
-        state.job_description = state.job_description or "None"
 
-        pdf_bytes_info = (
-            f"present ({len(state.resume_pdf_bytes)} bytes)"
-            if state.resume_pdf_bytes
-            else "not provided"
-        )
+      
+        # state.user_input = state.user_input # this is the content on resume
+        # state.resume_file_name = state.resume_file_name #just keep the file name for reference, not going to weight analysis
+        # state.notes = state.notes #user's personal notes regarding to the analysis 
+        # state.job_description = state.job_description # the job that the user is going to analyze
+
+        # pdf_bytes_info = (
+        #     f"present ({len(state.resume_pdf_bytes)} bytes)"
+        #     if state.resume_pdf_bytes
+        #     else "not provided"
+        # )
 
         answer = await chain.ainvoke(
             {
@@ -48,7 +49,7 @@ class ResumeAgent(GetLLM):
                 "resume_file_name": state.resume_file_name,
                 "notes": state.notes,
                 "job_description": state.job_description,
-                "pdf_bytes_info": pdf_bytes_info,
+                "pdf_bytes_info": state.resume_pdf_bytes,
             }
         )
 
