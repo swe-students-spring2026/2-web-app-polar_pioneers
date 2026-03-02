@@ -3,16 +3,30 @@ import asyncio
 from state import AppState
 from langgraph.graph import StateGraph, START, END
 
-async def ResumeGoRun(user_input: str):
 
+
+async def ResumeGoRun(
+    user_input: str,
+    resume_file_name: str | None = None,
+    resume_pdf_bytes: bytes | None = None,
+    job_description: str | None = None,
+    notes: str | None = None,
+):
+    
+    userState= AppState(
+            user_input=user_input,
+            resume_file_name=resume_file_name,
+            resume_pdf_bytes=resume_pdf_bytes,
+            job_description=job_description,
+            notes=notes,
+        )
     agentNode  = ResumeAgent(
         prompt=(
             "You are an expert resume reviewer. Analyze the provided information and return helpful, specific feedback. "
             "If resume details are incomplete, make reasonable assumptions and still provide an answer. "
             "Do not ask the user to clarify or provide more details. "
             "Return concise sections: Match Score (0-100), Strong Matches, Missing Skills, Suggested Edits, and AI Insights."
-        ),
-        user_input=user_input,
+        ), state=userState
     )
 
     
@@ -25,11 +39,39 @@ async def ResumeGoRun(user_input: str):
    
    
     resumeGo  = workflow.compile()
-    return await resumeGo.ainvoke(AppState(user_input=user_input))
+    return await resumeGo.ainvoke(userState)
     
+
+
 if __name__ == "__main__":
     import asyncio
-    output = asyncio.run(ResumeGoRun("Give a rating(100 points scale)of my resume as NYU supersmart student and intern at nvidia before for software engineer. Also, I have 3 AI robotic labs experiences."))
+    from pypdf import PdfReader
+    from io import BytesIO
+
+###this is the test run for this appRun.py, you can import your own pdf resume files to see the output from my agent on your on terminal
+    def _extract_pdf_text(pdf_bytes: bytes) -> str:
+        if not pdf_bytes:
+            return "pdf uploading error, make sure it's a pdf file!"
+
+        reader = PdfReader(BytesIO(pdf_bytes))
+        pages_text = [(page.extract_text() or "").strip() for page in reader.pages]
+        return "\n\n".join(text for text in pages_text if text).strip()
+
+    file_path="/Users/blakechang/Desktop/swe_gitpract/2-web-app-polar_pioneers/_Blake Chang's Resume.pdf"
+    with open(file_path, 'rb') as f:
+         resume_pdf_bytes = f.read()
+
+    extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
+
+    output = asyncio.run(
+        ResumeGoRun(
+            user_input=extracted_resume_text,
+            resume_file_name="_Blake Chang's Resume.pdf",
+            resume_pdf_bytes=b"empty for demo run",
+            job_description="Software Engineer role requiring Python, backend APIs, and ML exposure.",
+            notes="Prioritize concise feedback and concrete edits.",
+        )
+    )
     #I used this fixed input for demo, it will later on be the AppState(check state.py) object that load the pdf from our frontend website
     print(output['result'])
 

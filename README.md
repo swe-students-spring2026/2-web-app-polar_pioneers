@@ -26,7 +26,26 @@ ResumeGo enables job applicants to improve their chances of landing interviews b
 
 ## Steps necessary to run the software
 
-See instructions. Delete this line and place instructions to download, configure, and run the software here.
+**Install dependencies**
+   - Make sure you have Python 3.10+ installed.
+   - Install Pipenv (if not already installed):
+     ```bash
+     pip install pipenv
+
+**Run your pipenv**
+   Activation: pipenv shell
+
+
+**Run the Flask app**
+   
+   pipenv run flask --app appWeb run --debug
+   
+   Then, Click the URL shown in terminal (usually `http://127.0.0.1:5000`).
+**To play with our ResumeAgent**
+   Go to appRun.py and type: pipenv run python appRun.py
+
+
+
 
 ## Task boards
 
@@ -35,5 +54,5 @@ Here are the links for our task boards:
 ### Sprint 1
 https://github.com/orgs/swe-students-spring2026/projects/48
 
-### Spring 2
+### Sprint 2
 https://github.com/orgs/swe-students-spring2026/projects/52
