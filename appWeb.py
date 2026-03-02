@@ -13,8 +13,7 @@ import mongoSession
 
 
 load_dotenv()
-# initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
-initMongo("mongodb://localhost:27017/", os.getenv("MONGO_DBNAME", "resumego"))
+initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
 
 app = Flask(__name__)
 
