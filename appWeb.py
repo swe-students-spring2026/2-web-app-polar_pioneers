@@ -1,7 +1,16 @@
 import asyncio
 from datetime import date
+from io import BytesIO
 
 from flask import Flask, flash, redirect, render_template, request, url_for
+from pypdf import PdfReader
+
+from mongo import initMongo
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev"
@@ -69,6 +78,15 @@ def _build_fallback_insights(company: str, role: str, job_description: str) -> s
         f"Suggested Edits: quantify outcomes, mirror job-description wording, and prioritize relevant projects.\n"
         f"AI Insights: For {company or 'this company'}, highlight 2–3 accomplishments with measurable impact and tailor bullets to this requirement: {jd_preview}."
     )
+
+
+def _extract_pdf_text(pdf_bytes: bytes) -> str:
+    if not pdf_bytes:
+        return "pdf uploading error, make sure it's a pdf file!"
+
+    reader = PdfReader(BytesIO(pdf_bytes))
+    pages_text = [(page.extract_text() or "").strip() for page in reader.pages]
+    return "\n\n".join(text for text in pages_text if text).strip()
 
 
 def get_run_or_first(run_id: str):
@@ -159,24 +177,22 @@ def new_run():
 
             uploaded_file = request.files.get("resume_file")
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
+            resume_pdf_bytes = uploaded_file.read() 
+            extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
 
-            analysis_request = (
-                "Please analyze this candidate for the role and provide:\n"
-                "1) Match Score (0-100)\n"
-                "2) Strong Matches (bullet list)\n"
-                "3) Missing Skills (bullet list)\n"
-                "4) Suggested Edits (bullet list)\n"
-                "5) Final AI Insights paragraph\n\n"
-                f"Company: {company or 'N/A'}\n"
-                f"Role: {role or 'N/A'}\n"
-                f"Analysis title: {title or 'N/A'}\n"
-                f"Notes: {notes or 'N/A'}\n"
-                f"Uploaded resume filename: {resume_filename}\n\n"
-                "Job description:\n"
-                f"{job_description}"
+            result = asyncio.run(
+                ResumeGoRun(
+                    user_input=extracted_resume_text,
+                    resume_file_name=resume_filename,
+                    resume_pdf_bytes=resume_pdf_bytes,
+                    job_description=job_description,
+                    notes=notes,
+                )
             )
 
-            result = asyncio.run(ResumeGoRun(analysis_request))
+            """result is the ouput of our ResumeAgent, need to break the text down to:
+            score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
+
             ai_insights = str(result.get("result", "")).strip()
         except Exception as exc:
             ai_insights = f"Analysis failed: {exc}"
@@ -185,6 +201,8 @@ def new_run():
             ai_insights = _build_fallback_insights(company, role, job_description)
 
         run_id = next_run_id()
+
+        #need to split the result into 5 parts down here:
         new_item = {
             "_id": run_id,
             "title": title or (f"{company} — {role}".strip(" —") or "Untitled Analysis"),
