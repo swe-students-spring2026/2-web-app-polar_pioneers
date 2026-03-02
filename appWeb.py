@@ -1,23 +1,24 @@
-import asyncio
+import asyncio, os
+import mongo
+import mongoUser
+
 from datetime import date
-from io import BytesIO
-
-from flask import Flask, flash, redirect, render_template, request, url_for
-from pypdf import PdfReader
-
-from mongo import initMongo
 from dotenv import load_dotenv
-import os
+from io import BytesIO
+from flask import Flask, flash, redirect, render_template, request, url_for, session
+from pypdf import PdfReader
+from mongo import initMongo
 
 import parser
 import mongoSession
 
 load_dotenv()
 initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
-# initMongo("mongodb://localhost:27017/", "resumego")
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev"
+
+#get the secret key from env
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 
 def clarification_response(text: str) -> bool:
