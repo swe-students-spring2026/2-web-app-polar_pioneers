@@ -14,64 +14,59 @@
       </div>
     </div>
   </div>
+   {% if run.status =="COMPLETE" %}
 
-  <!-- Score -->
-  <div class="score-hero">
-    <div class="score-hero-number score-color--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}">{{ run.score }}</div>
-    <p class="score-hero-label">Match Score</p>
-    <div class="score-bar">
-      <div class="score-bar-fill score-bar-fill--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}" style="width:{{ run.score }}%"></div>
+    <!-- Score -->
+    <div class="score-hero">
+      <div class="score-hero-number score-color--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}">{{ run.score }}</div>
+      <p class="score-hero-label">Match Score</p>
+      <div class="score-bar">
+        <div class="score-bar-fill score-bar-fill--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}" style="width:{{ run.score }}%"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Strengths -->
-  {% if run.strong_matches %}
-  <div class="result-card">
-    <h2 class="result-card-title">Strong Matches</h2>
-    <ul class="result-list">
-      {% for item in run.strong_matches%}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </div>
+    <!-- Strengths -->
+    {% if run.strong_matches %}
+    <div class="result-card">
+      <h2 class="result-card-title">Strong Matches</h2>
+      <ul class="result-list">
+        {% for item in run.strong_matches%}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Missing Skills -->
+    {% if run.missing_skills %}
+    <div class="result-card">
+      <h2 class="result-card-title">Missing Skills</h2>
+      <ul class="result-list result-list--warn">
+        {% for item in run.missing_skills %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Suggested Edits -->
+    {% if run.suggested_edits %}
+    <div class="result-card">
+      <h2 class="result-card-title">Suggested Edits</h2>
+      <ul class="result-list">
+        {% for item in run.suggested_edits %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- AI Insights -->
+    {% if run.ai_insights %}
+    <div class="result-card">
+      <h2 class="result-card-title">AI Insights</h2>
+        <p class="result-paragraph">{{ run.ai_insights }}</p>
+    </div>
+    {% endif %}
   {% endif %}
-
-  <!-- Missing Skills -->
-  {% if run.missing_skills %}
-  <div class="result-card">
-    <h2 class="result-card-title">Missing Skills</h2>
-    <ul class="result-list result-list--warn">
-      {% for item in run.missing_skills %}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
-  <!-- Suggested Edits -->
-  {% if run.suggested_edits %}
-  <div class="result-card">
-    <h2 class="result-card-title">Suggested Edits</h2>
-    <ul class="result-list">
-      {% for item in run.suggested_edits %}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
-  <!-- AI Insights -->
-  {% if run.ai_insights %}
-  <div class="result-card">
-    <h2 class="result-card-title">AI Insights</h2>
-      <p class="result-paragraph">{{ run.ai_insights }}</p>
-  </div>
-  {% endif %}
-
-  <!-- Actions -->
-  <div class="detail-actions">
-    <a href="/runs/{{ run._id }}/delete" class="btn btn--danger-outline btn--block">Delete analysis</a>
-  </div>
-</section>
 {% endblock %}
-
