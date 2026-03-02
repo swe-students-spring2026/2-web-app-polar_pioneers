@@ -9,47 +9,15 @@ from mongo import initMongo
 from dotenv import load_dotenv
 import os
 
+import parser
+import mongoSession
+
 load_dotenv()
 initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
+# initMongo("mongodb://localhost:27017/", "resumego")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev"
-
-
-# Demo data so templates render without a database/backend yet.
-DEMO_RUNS = [
-    {
-        "_id": "1",
-        "title": "OpenAI — Software Engineer",
-        "company": "OpenAI",
-        "role": "Software Engineer",
-        "score": 82,
-        "created_at": "2026-02-25",
-        "status": "Interview",
-        "notes": "Strong backend alignment.",
-        "strengths": ["Python", "API design", "Problem solving"],
-        "missing_skills": ["Kubernetes", "GraphQL"],
-        "suggested_edits": [
-            "Quantify impact in 2 bullet points.",
-            "Add one cloud deployment example.",
-        ],
-        "insights": ["Great technical fit.", "Highlight leadership projects."],
-    },
-    {
-        "_id": "2",
-        "title": "Stripe — Backend Engineer",
-        "company": "Stripe",
-        "role": "Backend Engineer",
-        "score": 66,
-        "created_at": "2026-02-20",
-        "status": "Applied",
-        "notes": "Need stronger distributed systems examples.",
-        "strengths": ["Python", "SQL"],
-        "missing_skills": ["Distributed systems"],
-        "suggested_edits": ["Add scaling/caching project details."],
-        "insights": "Good baseline match with room to improve.",
-    },
-]
 
 
 def clarification_response(text: str) -> bool:
@@ -68,18 +36,6 @@ def clarification_response(text: str) -> bool:
     return any(marker in lowered for marker in clarification_markers)
 
 
-def _build_fallback_insights(company: str, role: str, job_description: str) -> str:
-    first_sentence = job_description.split(".")[0].strip()
-    jd_preview = first_sentence if first_sentence else "The posting emphasizes strong role alignment and measurable impact."
-    return (
-        f"Match Score: 70/100\n"
-        f"Strong Matches: transferable experience likely aligns with {role or 'the target role'} expectations.\n"
-        f"Missing Skills: add explicit keywords from the posting and any required tooling not yet listed.\n"
-        f"Suggested Edits: quantify outcomes, mirror job-description wording, and prioritize relevant projects.\n"
-        f"AI Insights: For {company or 'this company'}, highlight 2–3 accomplishments with measurable impact and tailor bullets to this requirement: {jd_preview}."
-    )
-
-
 def _extract_pdf_text(pdf_bytes: bytes) -> str:
     if not pdf_bytes:
         return "pdf uploading error, make sure it's a pdf file!"
@@ -87,18 +43,6 @@ def _extract_pdf_text(pdf_bytes: bytes) -> str:
     reader = PdfReader(BytesIO(pdf_bytes))
     pages_text = [(page.extract_text() or "").strip() for page in reader.pages]
     return "\n\n".join(text for text in pages_text if text).strip()
-
-
-def get_run_or_first(run_id: str):
-    for run in DEMO_RUNS:
-        if run["_id"] == run_id:
-            return run
-    return DEMO_RUNS[0]
-
-
-def next_run_id() -> str:
-    ids = [int(run.get("_id", "0")) for run in DEMO_RUNS if str(run.get("_id", "")).isdigit()]
-    return str(max(ids, default=0) + 1)
 
 
 @app.route("/")
@@ -130,47 +74,21 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", runs=DEMO_RUNS)
+    return render_template("dashboard.html", runs=[]) # TODO: call mongo get sessions
 
 
 @app.route("/runs/new", methods=["GET", "POST"])
 def new_run():
     if request.method == "POST":
-        action = request.form.get("action")
-        company = request.form.get("company", "").strip()
-        role = request.form.get("role", "").strip()
-        title = request.form.get("title", "").strip()
         notes = request.form.get("notes", "").strip()
         job_description = request.form.get("job_description", "").strip()
-
-        # Keep save-draft behavior lightweight.
-        if action == "draft":
-            run_id = next_run_id()
-            DEMO_RUNS.insert(
-                0,
-                {
-                    "_id": run_id,
-                    "title": title or (f"{company} — {role}".strip(" —") or "Untitled Draft"),
-                    "company": company,
-                    "role": role,
-                    "score": 0,
-                    "created_at": date.today().isoformat(),
-                    "status": "Draft",
-                    "notes": notes,
-                    "strengths": [],
-                    "missing_skills": [],
-                    "suggested_edits": [],
-                    "insights": "Draft saved. Run analysis to generate AI insights.",
-                },
-            )
-            flash("Draft saved.", "success")
-            return redirect(url_for("dashboard"))
 
         if not job_description:
             flash("Please paste a job description before running analysis.", "error")
             return redirect(url_for("new_run"))
 
-        ai_insights = ""
+        parsed_output: parser.AgentOutput | None = None
+        session_id = ""
         try:
             # Lazy import keeps the web app bootable even if AI deps are not installed yet.
             from appRun import ResumeGoRun
@@ -179,6 +97,8 @@ def new_run():
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
             resume_pdf_bytes = uploaded_file.read() 
             extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
+
+            session_id = mongoSession.createSession("blah", job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes)
 
             result = asyncio.run(
                 ResumeGoRun(
@@ -193,65 +113,45 @@ def new_run():
             """result is the ouput of our ResumeAgent, need to break the text down to:
             score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
 
-            ai_insights = str(result.get("result", "")).strip()
+            parsed_output = parser.parseAgentOutput(result["result"])
         except Exception as exc:
-            ai_insights = f"Analysis failed: {exc}"
+            error_msg = f"Analysis failed: {exc}"
+            print(error_msg)
+            mongoSession.setSessionError(session_id, error_msg)
+            return redirect(url_for("run_detail", run_id=session_id))
 
-        if clarification_response(ai_insights) or ai_insights.startswith("Analysis failed:"):
-            ai_insights = _build_fallback_insights(company, role, job_description)
+        mongoSession.completeSession(
+            session_id,
+            parsed_output["match_score"],
+            parsed_output["strong_matches"],
+            parsed_output["missing_skills"],
+            parsed_output["suggested_edits"],
+            parsed_output["ai_insights"]
+        )
 
-        run_id = next_run_id()
-
-        #need to split the result into 5 parts down here:
-        new_item = {
-            "_id": run_id,
-            "title": title or (f"{company} — {role}".strip(" —") or "Untitled Analysis"),
-            "company": company,
-            "role": role,
-            "score": 70,
-            "created_at": date.today().isoformat(),
-            "status": "Applied",
-            "notes": notes,
-            "strengths": [],
-            "missing_skills": [],
-            "suggested_edits": [],
-            "insights": ai_insights or "No insights were returned.",
-        }
-        DEMO_RUNS.insert(0, new_item)
         flash("Analysis completed.", "success")
-        return redirect(url_for("run_detail", run_id=run_id))
+        return redirect(url_for("run_detail", run_id=session_id))
     return render_template("new_run.html")
 
 
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
-    run = get_run_or_first(run_id)
+    session = mongoSession.getSessionById(run_id)
+    session["input"]["resume_file_name"]
+    run = {
+        "session_id": run_id,
+        "created_at": session["input"]["requested_at"].isoformat(),
+        "resume_file_name": session["input"]["resume_file_name"],
+        "status": session["status"].name,
+        "job_description": session["input"]["job_description"],
+        "notes": session["input"]["notes"],
+        "score": str(session["intput"]["score"]),
+        "strong_matches": session["output"]["strong_matches"],
+        "missing_skills": session["output"]["missing_skills"],
+        "suggested_edits": session["output"]["suggested_edits"],
+        "ai_insights": session["output"]["ai_insights"]
+    }
     return render_template("run_detail.html", run=run)
-
-
-@app.route("/runs/<run_id>/edit", methods=["GET", "POST"])
-def edit_run(run_id: str):
-    run = get_run_or_first(run_id)
-    if request.method == "POST":
-        run["title"] = request.form.get("title", run.get("title", ""))
-        run["company"] = request.form.get("company", run.get("company", ""))
-        run["role"] = request.form.get("role", run.get("role", ""))
-        run["status"] = request.form.get("status", run.get("status", "Draft"))
-        run["notes"] = request.form.get("notes", run.get("notes", ""))
-        flash("Analysis updated.", "success")
-        return redirect(url_for("run_detail", run_id=run_id))
-    return render_template("edit_run.html", run=run)
-
-
-@app.route("/runs/<run_id>/delete", methods=["GET", "POST"])
-def delete_run(run_id: str):
-    global DEMO_RUNS
-    if request.method == "POST":
-        DEMO_RUNS = [run for run in DEMO_RUNS if run["_id"] != run_id]
-        flash("Analysis deleted.", "success")
-        return redirect(url_for("dashboard"))
-    run = get_run_or_first(run_id)
-    return render_template("delete_confirm.html", run=run)
 
 
 if __name__ == "__main__":

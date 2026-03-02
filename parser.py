@@ -1,13 +1,13 @@
 from typing import TypedDict
 
-class SessionInput(TypedDict):
+class AgentOutput(TypedDict):
     match_score: int
     strong_matches: list[str]
     missing_skills: list[str]
     suggested_edits: list[str]
     ai_insights: str
 
-def parseAgentOutput(result):
+def parseAgentOutput(result) -> AgentOutput:
     result = result.strip()
 
     key_score = "**Match Score:"
