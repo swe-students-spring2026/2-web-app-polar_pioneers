@@ -1,19 +1,28 @@
-import asyncio
+import asyncio, os
+import mongo
+import mongoUser
+
 from datetime import date
-from io import BytesIO
-
-from flask import Flask, flash, redirect, render_template, request, url_for
-from pypdf import PdfReader
-
-from mongo import initMongo
 from dotenv import load_dotenv
-import os
+from io import BytesIO
+from flask import Flask, flash, redirect, render_template, request, url_for, session
+from pypdf import PdfReader
+from mongo import initMongo
 
 load_dotenv()
 initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
 
+
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev"
+
+#load .env information into the environment
+load_dotenv()
+
+#get the secret key from env
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+
+#connect flask with mongoDB
+mongo.initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME"))
 
 
 # Demo data so templates render without a database/backend yet.
@@ -109,7 +118,22 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        flash("Logged in (demo mode).", "success")
+        email = request.form.get("email", "").lower()
+        password = request.form.get("password","")
+        #ensure that both are inputed
+        if not email or not password:
+            return render_template("login.html")
+        result = mongoUser.login(email=email,password=password)
+        #check if the login is successful
+        if result["status"] == mongoUser.LoginStatus.ERROR_USER_NOT_FOUND:
+            return render_template("login.html")
+        if result["status"] == mongoUser.LoginStatus.ERROR_WRONG_PASSWORD:
+            return render_template("login.html")
+        if result["status"] != mongoUser.LoginStatus.SUCCESS:
+            return render_template("login.html")
+        #successful login so store the user info for the session
+        session["user_id"] = result["user_id"]
+        session["login_session_id"] = result["login_session_id"]
         return redirect(url_for("dashboard"))
     return render_template("login.html")
 
@@ -117,8 +141,32 @@ def login():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        flash("Account created (demo mode).", "success")
-        return redirect(url_for("dashboard"))
+        #getdata from submitted form
+        email = request.form.get("email", "")
+        password = request.form.get("password","")
+        confirm = request.form.get("confirm_password","")
+        #if the inputs are invalid just go back to the screen
+        if not email or not password:
+            return render_template("signup.html")
+        #check if the 2 passwords are the same
+        if password != confirm:
+            return render_template("signup.html")
+        result = mongoUser.addUser(email = email, password = password)
+        #if email already exist in the database or anything fails
+        if result["status"] == mongoUser.AddUserStatus.ERROR_EMAIL_EXISTS_ALREADY:
+            return redirect(url_for("login"))
+        if result["status"] == mongoUser.AddUserStatus.SUCCESS:
+            return render_template("signup.html")
+        #log the user in after successful signup
+        login_result = mongoUser.login(email=email, password = password)
+        #if login succeeds, store the user info in into the Flask session
+        if login_result["status"] == mongoUser.LoginStatus.SUCCESS:
+            session["user_id"] = login_result["user_id"]
+            session["login_session_id"] = login_result["login_session_id"]
+            return redirect(url_for("dashboard"))
+        #if login fails somehow
+        return redirect(url_for("login"))
+    #if the request is GET
     return render_template("signup.html")
 
 
