@@ -80,7 +80,7 @@ def login():
 def signup():
     if request.method == "POST":
         #getdata from submitted form
-        email = request.form.get("email", "")
+        email = request.form.get("email", "").lower()
         password = request.form.get("password","")
         confirm = request.form.get("confirm_password","")
         #if the inputs are invalid just go back to the screen
