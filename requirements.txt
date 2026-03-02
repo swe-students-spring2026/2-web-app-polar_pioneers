@@ -25,6 +25,7 @@ pyarrow==23.0.1
 pybreaker==1.4.1
 pydantic==2.12.5
 pydantic_core==2.41.5
+pypdf==6.1.1
 PyJWT==2.11.0
 pyspark==4.1.1
 python-dateutil==2.9.0.post0
