@@ -1,17 +1,16 @@
 import asyncio
 from datetime import date
 from io import BytesIO
-
 from flask import Flask, flash, redirect, render_template, request, url_for
 from pypdf import PdfReader
-
-from mongo import initMongo
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
-initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
+from mongo import initMongo
+# initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
+# initMongo("mongodb://localhost:27017/", os.getenv("MONGO_DBNAME", "resumego"))
 
+load_dotenv()
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev"
 
@@ -34,22 +33,8 @@ DEMO_RUNS = [
             "Add one cloud deployment example.",
         ],
         "insights": ["Great technical fit.", "Highlight leadership projects."],
-    },
-    {
-        "_id": "2",
-        "title": "Stripe — Backend Engineer",
-        "company": "Stripe",
-        "role": "Backend Engineer",
-        "score": 66,
-        "created_at": "2026-02-20",
-        "status": "Applied",
-        "notes": "Need stronger distributed systems examples.",
-        "strengths": ["Python", "SQL"],
-        "missing_skills": ["Distributed systems"],
-        "suggested_edits": ["Add scaling/caching project details."],
-        "insights": "Good baseline match with room to improve.",
-    },
-]
+    }
+    ]
 
 
 def clarification_response(text: str) -> bool:
@@ -179,6 +164,7 @@ def new_run():
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
             resume_pdf_bytes = uploaded_file.read() 
             extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
+            print(f"{extracted_resume_text}")
 
             result = asyncio.run(
                 ResumeGoRun(
@@ -190,12 +176,14 @@ def new_run():
                 )
             )
 
+            print(f"{result}")
+
+
             """result is the ouput of our ResumeAgent, need to break the text down to:
             score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
 
-            ai_insights = str(result.get("result", "")).strip()
         except Exception as exc:
-            ai_insights = f"Analysis failed: {exc}"
+            print("Error: ResumeGo analysis issue")
 
         if clarification_response(ai_insights) or ai_insights.startswith("Analysis failed:"):
             ai_insights = _build_fallback_insights(company, role, job_description)
@@ -215,7 +203,7 @@ def new_run():
             "strengths": [],
             "missing_skills": [],
             "suggested_edits": [],
-            "insights": ai_insights or "No insights were returned.",
+            "insights": ai_insights,
         }
         DEMO_RUNS.insert(0, new_item)
         flash("Analysis completed.", "success")
@@ -229,29 +217,29 @@ def run_detail(run_id: str):
     return render_template("run_detail.html", run=run)
 
 
-@app.route("/runs/<run_id>/edit", methods=["GET", "POST"])
-def edit_run(run_id: str):
-    run = get_run_or_first(run_id)
-    if request.method == "POST":
-        run["title"] = request.form.get("title", run.get("title", ""))
-        run["company"] = request.form.get("company", run.get("company", ""))
-        run["role"] = request.form.get("role", run.get("role", ""))
-        run["status"] = request.form.get("status", run.get("status", "Draft"))
-        run["notes"] = request.form.get("notes", run.get("notes", ""))
-        flash("Analysis updated.", "success")
-        return redirect(url_for("run_detail", run_id=run_id))
-    return render_template("edit_run.html", run=run)
+# @app.route("/runs/<run_id>/edit", methods=["GET", "POST"])
+# def edit_run(run_id: str):
+#     run = get_run_or_first(run_id)
+#     if request.method == "POST":
+#         run["title"] = request.form.get("title", run.get("title", ""))
+#         run["company"] = request.form.get("company", run.get("company", ""))
+#         run["role"] = request.form.get("role", run.get("role", ""))
+#         run["status"] = request.form.get("status", run.get("status", "Draft"))
+#         run["notes"] = request.form.get("notes", run.get("notes", ""))
+#         flash("Analysis updated.", "success")
+#         return redirect(url_for("run_detail", run_id=run_id))
+#     return render_template("edit_run.html", run=run)
 
 
-@app.route("/runs/<run_id>/delete", methods=["GET", "POST"])
-def delete_run(run_id: str):
-    global DEMO_RUNS
-    if request.method == "POST":
-        DEMO_RUNS = [run for run in DEMO_RUNS if run["_id"] != run_id]
-        flash("Analysis deleted.", "success")
-        return redirect(url_for("dashboard"))
-    run = get_run_or_first(run_id)
-    return render_template("delete_confirm.html", run=run)
+# @app.route("/runs/<run_id>/delete", methods=["GET", "POST"])
+# def delete_run(run_id: str):
+#     global DEMO_RUNS
+#     if request.method == "POST":
+#         DEMO_RUNS = [run for run in DEMO_RUNS if run["_id"] != run_id]
+#         flash("Analysis deleted.", "success")
+#         return redirect(url_for("dashboard"))
+#     run = get_run_or_first(run_id)
+#     return render_template("delete_confirm.html", run=run)
 
 
 if __name__ == "__main__":

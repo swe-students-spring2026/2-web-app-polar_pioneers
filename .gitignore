@@ -146,3 +146,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# local resume file
+/Users/blakechang/Desktop/swe_gitpract/2-web-app-polar_pioneers/_Blake Chang's Resume.pdf
