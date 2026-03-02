@@ -186,6 +186,17 @@ def new_run():
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
     session = mongoSession.getSessionById(run_id)
+    if(session is None):
+        run = {
+            "session_id": "",
+            "created_at": "",
+            "resume_file_name": "Run Does Not Exist",
+            "status": "Run Does Not Exist",
+            "job_description": "",
+            "notes": ""
+        }
+        return render_template("run_detail.html", run=run)
+        
     if(session["status"] == mongoSession.SessionStatus.COMPLETE):
         run = {
             "session_id": run_id,
