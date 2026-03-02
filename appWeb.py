@@ -21,6 +21,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 
+
 def clarification_response(text: str) -> bool:
     if not text:
         return True
@@ -137,7 +138,7 @@ def new_run():
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
             resume_pdf_bytes = uploaded_file.read() 
             extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
-            print(f"{extracted_resume_text}")
+            # print(f"{extracted_resume_text}")
 
             session_id = mongoSession.createSession("blah", job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes)
 
@@ -189,7 +190,7 @@ def run_detail(run_id: str):
             "status": session["status"].name,
             "job_description": session["input"]["job_description"],
             "notes": session["input"]["notes"],
-            "score": str(session["output"]["match_score"]),
+            "score": (session["output"]["match_score"]),
             "strong_matches": session["output"]["strong_matches"],
             "missing_skills": session["output"]["missing_skills"],
             "suggested_edits": session["output"]["suggested_edits"],
