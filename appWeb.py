@@ -61,9 +61,9 @@ def login():
             return render_template("login.html")
         result = mongoUser.login(email=email,password=password)
         #check if the login is successful
-        if result["status"] == mongoUser.LoginStatus.ERROR_USER_NOT_FOUND:
+        if result["status"] == mongoUser.LoginStatus.ERROR_EMAIL_NOT_FOUND:
             return render_template("login.html")
-        if result["status"] == mongoUser.LoginStatus.ERROR_WRONG_PASSWORD:
+        if result["status"] == mongoUser.LoginStatus.ERROR_PASSWORD_INCORRECT:
             return render_template("login.html")
         if result["status"] != mongoUser.LoginStatus.SUCCESS:
             return render_template("login.html")
@@ -181,7 +181,21 @@ def new_run():
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
     session = mongoSession.getSessionById(run_id)
-    session["input"]["resume_file_name"]
+    if(session["status"] == mongoSession.SessionStatus.COMPLETE):
+        run = {
+            "session_id": run_id,
+            "created_at": session["input"]["requested_at"].isoformat(),
+            "resume_file_name": session["input"]["resume_file_name"],
+            "status": session["status"].name,
+            "job_description": session["input"]["job_description"],
+            "notes": session["input"]["notes"],
+            "score": str(session["output"]["match_score"]),
+            "strong_matches": session["output"]["strong_matches"],
+            "missing_skills": session["output"]["missing_skills"],
+            "suggested_edits": session["output"]["suggested_edits"],
+            "ai_insights": session["output"]["ai_insights"]
+        }
+        return render_template("run_detail.html", run=run)
     run = {
         "session_id": run_id,
         "created_at": session["input"]["requested_at"].isoformat(),
@@ -189,11 +203,6 @@ def run_detail(run_id: str):
         "status": session["status"].name,
         "job_description": session["input"]["job_description"],
         "notes": session["input"]["notes"],
-        "score": str(session["intput"]["score"]),
-        "strong_matches": session["output"]["strong_matches"],
-        "missing_skills": session["output"]["missing_skills"],
-        "suggested_edits": session["output"]["suggested_edits"],
-        "ai_insights": session["output"]["ai_insights"]
     }
     return render_template("run_detail.html", run=run)
 

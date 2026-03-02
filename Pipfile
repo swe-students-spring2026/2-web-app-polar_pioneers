@@ -13,7 +13,6 @@ langchain-openai = "*"
 langchain-core = "*"
 typing-inspection = "*"
 pymongo = "*"
+bcrypt = "*"
 
 [dev-packages]
-
-
