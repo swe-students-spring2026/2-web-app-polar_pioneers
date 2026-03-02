@@ -116,7 +116,37 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", runs=[]) # TODO: call mongo get sessions
+    user_id = session['user_id']
+    _sessions = mongoSession.getAllSessionsByUser(user_id)
+
+    runs = []
+
+    for _session in _sessions:
+        if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
+            runs.append({
+                "_session_id": _session["session_id"],
+                "created_at": _session["input"]["requested_at"].isoformat(),
+                "resume_file_name": _session["input"]["resume_file_name"],
+                "status": _session["status"].name,
+                "job_description": _session["input"]["job_description"],
+                "notes": _session["input"]["notes"],
+                "score": _session["output"]["match_score"],
+                "strong_matches": _session["output"]["strong_matches"],
+                "missing_skills": _session["output"]["missing_skills"],
+                "suggested_edits": _session["output"]["suggested_edits"],
+                "ai_insights": _session["output"]["ai_insights"]
+            })
+        else:
+            runs.append({
+                "_session_id": _session["session_id"],
+                "created_at": _session["input"]["requested_at"].isoformat(),
+                "resume_file_name": _session["input"]["resume_file_name"],
+                "status": _session["status"].name,
+                "job_description": _session["input"]["job_description"],
+                "notes": _session["input"]["notes"],
+            })
+    
+    return render_template("dashboard.html", runs=runs)
 
 
 @app.route("/runs/new", methods=["GET", "POST"])
