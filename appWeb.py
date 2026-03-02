@@ -22,6 +22,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 
+
 def clarification_response(text: str) -> bool:
     if not text:
         return True

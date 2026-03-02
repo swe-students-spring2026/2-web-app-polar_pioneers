@@ -7,7 +7,7 @@
 
   <div class="run-header">
     <div>
-      <h1 class="page-title" style="margin-bottom:.25rem;">{{ run.title or 'Untitled Analysis' }}</h1>
+      <h1 class="page-title" style="margin-bottom:.25rem;">{{ run.resume_file_name or 'Your Resume Analysis' }}</h1>
       <div class="run-header-meta">
         
         <span class="run-header-date">{{ run.created_at }}</span>
@@ -70,3 +70,4 @@
     {% endif %}
   {% endif %}
 {% endblock %}
+
