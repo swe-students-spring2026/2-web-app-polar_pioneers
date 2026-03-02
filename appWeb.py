@@ -5,6 +5,13 @@ from io import BytesIO
 from flask import Flask, flash, redirect, render_template, request, url_for
 from pypdf import PdfReader
 
+from mongo import initMongo
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev"
 
