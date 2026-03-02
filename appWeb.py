@@ -13,7 +13,8 @@ import mongoSession
 
 
 load_dotenv()
-initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
+# initMongo(os.getenv("MONGO_URI"), os.getenv("MONGO_DBNAME", "resumego"))
+initMongo("mongodb://localhost:27017/", os.getenv("MONGO_DBNAME", "resumego"))
 
 app = Flask(__name__)
 
@@ -138,7 +139,6 @@ def new_run():
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
             resume_pdf_bytes = uploaded_file.read() 
             extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
-            # print(f"{extracted_resume_text}")
 
             session_id = mongoSession.createSession("blah", job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes)
 
@@ -146,22 +146,26 @@ def new_run():
                 ResumeGoRun(
                     user_input=extracted_resume_text,
                     resume_file_name=resume_filename,
-                    resume_pdf_bytes=resume_pdf_bytes,
+                    resume_pdf_bytes=bytes(),
                     job_description=job_description,
                     notes=notes,
                 )
             )
 
-            print(f"{result}")
-
 
             """result is the ouput of our ResumeAgent, need to break the text down to:
             score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
 
+            print(result["result"])
             parsed_output = parser.parseAgentOutput(result["result"])
+            print(parsed_output)
         except Exception as exc:
             error_msg = f"Analysis failed: {exc}"
             print(error_msg)
+            mongoSession.setSessionError(session_id, error_msg)
+            return redirect(url_for("run_detail", run_id=session_id))
+
+        if(parsed_output is None):
             mongoSession.setSessionError(session_id, error_msg)
             return redirect(url_for("run_detail", run_id=session_id))
 
@@ -174,7 +178,7 @@ def new_run():
             parsed_output["ai_insights"]
         )
 
-        flash("Analysis completed.", "success")
+        # flash("Analysis completed.", "success")
         return redirect(url_for("run_detail", run_id=session_id))
     return render_template("new_run.html")
 
@@ -190,7 +194,7 @@ def run_detail(run_id: str):
             "status": session["status"].name,
             "job_description": session["input"]["job_description"],
             "notes": session["input"]["notes"],
-            "score": (session["output"]["match_score"]),
+            "score": session["output"]["match_score"],
             "strong_matches": session["output"]["strong_matches"],
             "missing_skills": session["output"]["missing_skills"],
             "suggested_edits": session["output"]["suggested_edits"],
