@@ -59,6 +59,7 @@ def login():
         email = request.form.get("email", "").lower()
         password = request.form.get("password","")
         #ensure that both are inputed
+      
         if not email or not password:
             return render_template("login.html")
         result = mongoUser.login(email=email,password=password)
@@ -69,9 +70,11 @@ def login():
             return render_template("login.html")
         if result["status"] != mongoUser.LoginStatus.SUCCESS:
             return render_template("login.html")
+
         #successful login so store the user info for the session
         session["user_id"] = result["user_id"]
         session["login_session_id"] = result["login_session_id"]
+        
         return redirect(url_for("dashboard"))
     return render_template("login.html")
 
