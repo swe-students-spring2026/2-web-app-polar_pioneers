@@ -118,7 +118,7 @@ def runTests():
     sessions = getAllSessionsByUserInStatus(user_id, SessionStatus.ERROR)
     assert len(sessions) == 0
 
-    result = completeSession(session1_id, 100, ["1", "2"], ["3", "4"], ["5", "6"], ["7", "8"])
+    result = completeSession(session1_id, 100, ["1", "2"], ["3", "4"], ["5", "6"], "789")
     assert result
 
     sessions = getAllSessionsByUserInStatus(user_id, SessionStatus.PENDING)
@@ -132,7 +132,7 @@ def runTests():
     assert sessions[0]["output"]["strong_matches"] == ["1", "2"]
     assert sessions[0]["output"]["missing_skills"] == ["3", "4"]
     assert sessions[0]["output"]["suggested_edits"] == ["5", "6"]
-    assert sessions[0]["output"]["ai_insights"] == ["7", "8"]
+    assert sessions[0]["output"]["ai_insights"] == "789"
 
     sessions = getAllSessionsByUserInStatus(user_id, SessionStatus.ERROR)
     assert len(sessions) == 0

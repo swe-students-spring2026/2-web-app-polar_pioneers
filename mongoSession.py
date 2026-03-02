@@ -31,7 +31,7 @@ class SessionOutput(TypedDict):
     strong_matches: list[str]
     missing_skills: list[str]
     suggested_edits: list[str]
-    ai_insights: list[str]
+    ai_insights: str
 
 class Session(TypedDict):
     session_id: str
@@ -115,7 +115,7 @@ def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Se
     results = list(getCollectionSessions().find({"user_id": user_id, "status": status.name}).sort("input.requested_at", -1))
     return _castToSessionList(results)
 
-def completeSession(session_id: str, match_score: int, strong_matches: list[str], missing_skills: list[str], suggested_edits: list[str], ai_insights: list[str]) -> bool:
+def completeSession(session_id: str, match_score: int, strong_matches: list[str], missing_skills: list[str], suggested_edits: list[str], ai_insights: str) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
         {"$set": {
