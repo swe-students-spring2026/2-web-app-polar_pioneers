@@ -110,13 +110,23 @@ def signup():
 
 @app.route("/logout")
 def logout():
+    # TODO: better
+    session["user_id"] = ""
+    session["login_session_id"] = ""
     flash("Logged out.", "info")
     return redirect(url_for("index"))
 
 
 @app.route("/dashboard")
 def dashboard():
-    user_id = session['user_id']
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+    
     _sessions = mongoSession.getAllSessionsByUser(user_id)
 
     runs = []
@@ -151,6 +161,14 @@ def dashboard():
 
 @app.route("/runs/new", methods=["GET", "POST"])
 def new_run():
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+    
     if request.method == "POST":
         notes = request.form.get("notes", "").strip()
         job_description = request.form.get("job_description", "").strip()
@@ -215,8 +233,16 @@ def new_run():
 
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
-    session = mongoSession.getSessionById(run_id)
-    if(session is None):
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+    
+    _session = mongoSession.getSessionById(run_id)
+    if(_session is None):
         run = {
             "session_id": "",
             "created_at": "",
@@ -227,28 +253,28 @@ def run_detail(run_id: str):
         }
         return render_template("run_detail.html", run=run)
         
-    if(session["status"] == mongoSession.SessionStatus.COMPLETE):
+    if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
         run = {
             "session_id": run_id,
-            "created_at": session["input"]["requested_at"].isoformat(),
-            "resume_file_name": session["input"]["resume_file_name"],
-            "status": session["status"].name,
-            "job_description": session["input"]["job_description"],
-            "notes": session["input"]["notes"],
-            "score": session["output"]["match_score"],
-            "strong_matches": session["output"]["strong_matches"],
-            "missing_skills": session["output"]["missing_skills"],
-            "suggested_edits": session["output"]["suggested_edits"],
-            "ai_insights": session["output"]["ai_insights"]
+            "created_at": _session["input"]["requested_at"].isoformat(),
+            "resume_file_name": _session["input"]["resume_file_name"],
+            "status": _session["status"].name,
+            "job_description": _session["input"]["job_description"],
+            "notes": _session["input"]["notes"],
+            "score": _session["output"]["match_score"],
+            "strong_matches": _session["output"]["strong_matches"],
+            "missing_skills": _session["output"]["missing_skills"],
+            "suggested_edits": _session["output"]["suggested_edits"],
+            "ai_insights": _session["output"]["ai_insights"]
         }
         return render_template("run_detail.html", run=run)
     run = {
         "session_id": run_id,
-        "created_at": session["input"]["requested_at"].isoformat(),
-        "resume_file_name": session["input"]["resume_file_name"],
-        "status": session["status"].name,
-        "job_description": session["input"]["job_description"],
-        "notes": session["input"]["notes"],
+        "created_at": _session["input"]["requested_at"].isoformat(),
+        "resume_file_name": _session["input"]["resume_file_name"],
+        "status": _session["status"].name,
+        "job_description": _session["input"]["job_description"],
+        "notes": _session["input"]["notes"],
     }
     return render_template("run_detail.html", run=run)
 
