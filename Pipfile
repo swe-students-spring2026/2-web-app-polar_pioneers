@@ -11,8 +11,13 @@ flask-login = "==0.6.3"
 langchain = "*"
 langchain-openai = "*"
 langchain-core = "*"
+langgraph = "*"
 typing-inspection = "*"
 pymongo = "*"
 bcrypt = "*"
+pypdf = "*"
 
 [dev-packages]
+
+[requires]
+python_version = "3.13"

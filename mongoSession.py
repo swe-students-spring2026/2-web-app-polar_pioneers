@@ -63,7 +63,7 @@ def _castToSessionList(sessions: list[dict]) -> list[Session]:
             sessions_new.append(session)
     return sessions_new
 
-def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf", notes: str = "") -> str:
+def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf", notes: str = "", companyName:str="") -> str:
     session_id = str(uuid.uuid4())
 
     resume_file_id = getBucketResumes().upload_from_stream(
@@ -87,6 +87,7 @@ def createSession(user_id: str, job_description: str, resume_file_name, resume_f
             "resume_file_name": resume_file_name,
             "resume_file_id": resume_file_id,
             "resume_file_type": resume_file_type,
+            "C_name":companyName,
             "notes": notes
         },
         "output": None

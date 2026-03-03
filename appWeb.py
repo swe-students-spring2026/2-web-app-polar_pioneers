@@ -67,6 +67,7 @@ def login():
         email = request.form.get("email", "").lower()
         password = request.form.get("password","")
         #ensure that both are inputed
+      
         if not email or not password:
             return render_template("login.html", is_valid=False)
         result = mongoUser.login(email=email,password=password)
@@ -80,6 +81,7 @@ def login():
         #successful login so store the user info for the session
         session["user_id"] = result["user_id"]
         session["login_session_id"] = result["login_session_id"]
+        
         return redirect(url_for("dashboard"))
     return render_template("login.html", is_valid=False)
 
@@ -147,6 +149,7 @@ def dashboard():
                 "resume_file_name": _session["input"]["resume_file_name"],
                 "status": _session["status"].name,
                 "job_description": _session["input"]["job_description"],
+                "Company_name": _session["input"]["C_name"],
                 "notes": _session["input"]["notes"],
                 "score": _session["output"]["match_score"],
                 "strong_matches": _session["output"]["strong_matches"],
@@ -161,6 +164,7 @@ def dashboard():
                 "resume_file_name": _session["input"]["resume_file_name"],
                 "status": _session["status"].name,
                 "job_description": _session["input"]["job_description"],
+                "Company_name": _session["input"]["C_name"],
                 "notes": _session["input"]["notes"],
             })
     
@@ -180,6 +184,7 @@ def new_run():
     if request.method == "POST":
         notes = request.form.get("notes", "").strip()
         job_description = request.form.get("job_description", "").strip()
+        companyName =request.form.get("cName", "").strip()
 
         if not job_description:
             flash("Please paste a job description before running analysis.", "error")
@@ -188,15 +193,15 @@ def new_run():
         parsed_output: parser.AgentOutput | None = None
         session_id = ""
         try:
-            # Lazy import keeps the web app bootable even if AI deps are not installed yet.
-            from appRun import ResumeGoRun
 
+            from appRun import ResumeGoRun #now extract user inputs on analysis page and put into ResumeAgent
+            
             uploaded_file = request.files.get("resume_file")
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
             resume_pdf_bytes = uploaded_file.read() 
             extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
 
-            session_id = mongoSession.createSession("blah", job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes)
+            session_id = mongoSession.createSession(user_id, job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes, companyName)
 
             result = asyncio.run(
                 ResumeGoRun(
@@ -268,6 +273,7 @@ def run_detail(run_id: str):
             "resume_file_name": _session["input"]["resume_file_name"],
             "status": _session["status"].name,
             "job_description": _session["input"]["job_description"],
+            "Company_name": _session["input"]["C_name"],
             "notes": _session["input"]["notes"],
             "score": _session["output"]["match_score"],
             "strong_matches": _session["output"]["strong_matches"],
@@ -282,6 +288,7 @@ def run_detail(run_id: str):
         "resume_file_name": _session["input"]["resume_file_name"],
         "status": _session["status"].name,
         "job_description": _session["input"]["job_description"],
+        "Company_name": _session["input"]["C_name"],
         "notes": _session["input"]["notes"],
     }
     return render_template("run_detail.html", is_valid=True, run=run)

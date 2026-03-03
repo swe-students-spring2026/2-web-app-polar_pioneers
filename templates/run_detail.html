@@ -21,7 +21,7 @@
       <div class="score-hero-number score-color--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}">{{ run.score }}</div>
       <p class="score-hero-label">Match Score</p>
       <div class="score-bar">
-        <div class="score-bar-fill score-bar-fill--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}" style="width:{{ run.score }}%"></div>
+        <div class="score-bar-fill score-bar-fill--{{ 'high' if run.score >= 70 else ('mid' if run.score >= 40 else 'low') }}" data-score="{{ run.score }}"></div>
       </div>
     </div>
 
@@ -69,5 +69,15 @@
     </div>
     {% endif %}
   {% endif %}
+
+  <script>
+    (function () {
+      const scoreFill = document.querySelector('.score-bar-fill[data-score]');
+      if (!scoreFill) return;
+      const score = Number(scoreFill.dataset.score);
+      const clamped = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0;
+      scoreFill.style.width = `${clamped}%`;
+    })();
+  </script>
 {% endblock %}
 
