@@ -135,9 +135,9 @@ def new_run():
         parsed_output: parser.AgentOutput | None = None
         session_id = ""
         try:
-            # Lazy import keeps the web app bootable even if AI deps are not installed yet.
-            from appRun import ResumeGoRun
 
+            from appRun import ResumeGoRun #now extract user inputs on analysis page and put into ResumeAgent
+            
             uploaded_file = request.files.get("resume_file")
             resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
             resume_pdf_bytes = uploaded_file.read() 
