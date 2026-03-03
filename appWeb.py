@@ -49,7 +49,16 @@ def _extract_pdf_text(pdf_bytes: bytes) -> str:
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return render_template("index.html", is_valid=False)
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return render_template("index.html", is_valid=False)
+
+    return render_template("index.html", is_valid=True)
+    
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -59,41 +68,41 @@ def login():
         password = request.form.get("password","")
         #ensure that both are inputed
         if not email or not password:
-            return render_template("login.html")
+            return render_template("login.html", is_valid=False)
         result = mongoUser.login(email=email,password=password)
         #check if the login is successful
         if result["status"] == mongoUser.LoginStatus.ERROR_EMAIL_NOT_FOUND:
-            return render_template("login.html")
+            return render_template("login.html", is_valid=False)
         if result["status"] == mongoUser.LoginStatus.ERROR_PASSWORD_INCORRECT:
-            return render_template("login.html")
+            return render_template("login.html", is_valid=False)
         if result["status"] != mongoUser.LoginStatus.SUCCESS:
-            return render_template("login.html")
+            return render_template("login.html", is_valid=False)
         #successful login so store the user info for the session
         session["user_id"] = result["user_id"]
         session["login_session_id"] = result["login_session_id"]
         return redirect(url_for("dashboard"))
-    return render_template("login.html")
+    return render_template("login.html", is_valid=False)
 
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
         #getdata from submitted form
-        email = request.form.get("email", "")
+        email = request.form.get("email", "").lower()
         password = request.form.get("password","")
         confirm = request.form.get("confirm_password","")
         #if the inputs are invalid just go back to the screen
         if not email or not password:
-            return render_template("signup.html")
+            return render_template("signup.html", is_valid=False)
         #check if the 2 passwords are the same
         if password != confirm:
-            return render_template("signup.html")
+            return render_template("signup.html", is_valid=False)
         result = mongoUser.addUser(email = email, password = password)
         #if email already exist in the database or anything fails
         if result["status"] == mongoUser.AddUserStatus.ERROR_EMAIL_EXISTS_ALREADY:
             return redirect(url_for("login"))
         if result["status"] == mongoUser.AddUserStatus.SUCCESS:
-            return render_template("signup.html")
+            return render_template("signup.html", is_valid=False)
         #log the user in after successful signup
         login_result = mongoUser.login(email=email, password = password)
         #if login succeeds, store the user info in into the Flask session
@@ -104,22 +113,70 @@ def signup():
         #if login fails somehow
         return redirect(url_for("login"))
     #if the request is GET
-    return render_template("signup.html")
+    return render_template("signup.html", is_valid=False)
 
 
 @app.route("/logout")
 def logout():
+    # TODO: better
+    session["user_id"] = ""
+    session["login_session_id"] = ""
     flash("Logged out.", "info")
     return redirect(url_for("index"))
 
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", runs=[]) # TODO: call mongo get sessions
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+    
+    _sessions = mongoSession.getAllSessionsByUser(user_id)
+
+    runs = []
+
+    for _session in _sessions:
+        if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
+            runs.append({
+                "_session_id": _session["session_id"],
+                "created_at": _session["input"]["requested_at"].isoformat(),
+                "resume_file_name": _session["input"]["resume_file_name"],
+                "status": _session["status"].name,
+                "job_description": _session["input"]["job_description"],
+                "notes": _session["input"]["notes"],
+                "score": _session["output"]["match_score"],
+                "strong_matches": _session["output"]["strong_matches"],
+                "missing_skills": _session["output"]["missing_skills"],
+                "suggested_edits": _session["output"]["suggested_edits"],
+                "ai_insights": _session["output"]["ai_insights"]
+            })
+        else:
+            runs.append({
+                "_session_id": _session["session_id"],
+                "created_at": _session["input"]["requested_at"].isoformat(),
+                "resume_file_name": _session["input"]["resume_file_name"],
+                "status": _session["status"].name,
+                "job_description": _session["input"]["job_description"],
+                "notes": _session["input"]["notes"],
+            })
+    
+    return render_template("dashboard.html", is_valid=True, runs=runs)
 
 
 @app.route("/runs/new", methods=["GET", "POST"])
 def new_run():
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+    
     if request.method == "POST":
         notes = request.form.get("notes", "").strip()
         job_description = request.form.get("job_description", "").strip()
@@ -179,13 +236,21 @@ def new_run():
 
         # flash("Analysis completed.", "success")
         return redirect(url_for("run_detail", run_id=session_id))
-    return render_template("new_run.html")
+    return render_template("new_run.html", is_valid=True)
 
 
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
-    session = mongoSession.getSessionById(run_id)
-    if(session is None):
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+    
+    _session = mongoSession.getSessionById(run_id)
+    if(_session is None):
         run = {
             "session_id": "",
             "created_at": "",
@@ -196,30 +261,30 @@ def run_detail(run_id: str):
         }
         return render_template("run_detail.html", run=run)
         
-    if(session["status"] == mongoSession.SessionStatus.COMPLETE):
+    if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
         run = {
             "session_id": run_id,
-            "created_at": session["input"]["requested_at"].isoformat(),
-            "resume_file_name": session["input"]["resume_file_name"],
-            "status": session["status"].name,
-            "job_description": session["input"]["job_description"],
-            "notes": session["input"]["notes"],
-            "score": session["output"]["match_score"],
-            "strong_matches": session["output"]["strong_matches"],
-            "missing_skills": session["output"]["missing_skills"],
-            "suggested_edits": session["output"]["suggested_edits"],
-            "ai_insights": session["output"]["ai_insights"]
+            "created_at": _session["input"]["requested_at"].isoformat(),
+            "resume_file_name": _session["input"]["resume_file_name"],
+            "status": _session["status"].name,
+            "job_description": _session["input"]["job_description"],
+            "notes": _session["input"]["notes"],
+            "score": _session["output"]["match_score"],
+            "strong_matches": _session["output"]["strong_matches"],
+            "missing_skills": _session["output"]["missing_skills"],
+            "suggested_edits": _session["output"]["suggested_edits"],
+            "ai_insights": _session["output"]["ai_insights"]
         }
         return render_template("run_detail.html", run=run)
     run = {
         "session_id": run_id,
-        "created_at": session["input"]["requested_at"].isoformat(),
-        "resume_file_name": session["input"]["resume_file_name"],
-        "status": session["status"].name,
-        "job_description": session["input"]["job_description"],
-        "notes": session["input"]["notes"],
+        "created_at": _session["input"]["requested_at"].isoformat(),
+        "resume_file_name": _session["input"]["resume_file_name"],
+        "status": _session["status"].name,
+        "job_description": _session["input"]["job_description"],
+        "notes": _session["input"]["notes"],
     }
-    return render_template("run_detail.html", run=run)
+    return render_template("run_detail.html", is_valid=True, run=run)
 
 
 if __name__ == "__main__":

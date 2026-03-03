@@ -18,7 +18,7 @@
         ResumeGo
       </a>
       <nav class="header-nav">
-        {% if current_user and current_user.is_authenticated %}
+        {% if is_valid %}
           <a href="/dashboard" class="nav-link">Dashboard</a>
           
           <a href="/logout" class="nav-link nav-link--muted">Logout</a>
