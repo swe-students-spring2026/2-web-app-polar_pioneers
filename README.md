@@ -38,7 +38,7 @@ ResumeGo enables job applicants to improve their chances of landing interviews b
 
 **Run the Flask app**
    
-   pipenv run flask --app appWeb run --debug
+   pipenv run python appWeb.py
    
    Then, Click the URL shown in terminal (usually `http://127.0.0.1:5000`).
 **To play with our ResumeAgent**
