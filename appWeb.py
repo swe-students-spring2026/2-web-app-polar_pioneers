@@ -103,7 +103,7 @@ def signup():
         #if email already exist in the database or anything fails
         if result["status"] == mongoUser.AddUserStatus.ERROR_EMAIL_EXISTS_ALREADY:
             return redirect(url_for("login"))
-        if result["status"] == mongoUser.AddUserStatus.SUCCESS:
+        if result["status"] != mongoUser.AddUserStatus.SUCCESS:
             return render_template("signup.html", is_valid=False)
         #log the user in after successful signup
         login_result = mongoUser.login(email=email, password = password)
