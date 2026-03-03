@@ -149,6 +149,7 @@ def dashboard():
                 "resume_file_name": _session["input"]["resume_file_name"],
                 "status": _session["status"].name,
                 "job_description": _session["input"]["job_description"],
+                "Company_name": _session["input"]["C_name"],
                 "notes": _session["input"]["notes"],
                 "score": _session["output"]["match_score"],
                 "strong_matches": _session["output"]["strong_matches"],
@@ -163,6 +164,7 @@ def dashboard():
                 "resume_file_name": _session["input"]["resume_file_name"],
                 "status": _session["status"].name,
                 "job_description": _session["input"]["job_description"],
+                "Company_name": _session["input"]["C_name"],
                 "notes": _session["input"]["notes"],
             })
     
@@ -182,6 +184,7 @@ def new_run():
     if request.method == "POST":
         notes = request.form.get("notes", "").strip()
         job_description = request.form.get("job_description", "").strip()
+        companyName =request.form.get("cName", "").strip()
 
         if not job_description:
             flash("Please paste a job description before running analysis.", "error")
@@ -198,7 +201,7 @@ def new_run():
             resume_pdf_bytes = uploaded_file.read() 
             extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
 
-            session_id = mongoSession.createSession("blah", job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes)
+            session_id = mongoSession.createSession(user_id, job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes, companyName)
 
             result = asyncio.run(
                 ResumeGoRun(
@@ -270,6 +273,7 @@ def run_detail(run_id: str):
             "resume_file_name": _session["input"]["resume_file_name"],
             "status": _session["status"].name,
             "job_description": _session["input"]["job_description"],
+            "Company_name": _session["input"]["C_name"],
             "notes": _session["input"]["notes"],
             "score": _session["output"]["match_score"],
             "strong_matches": _session["output"]["strong_matches"],
@@ -284,6 +288,7 @@ def run_detail(run_id: str):
         "resume_file_name": _session["input"]["resume_file_name"],
         "status": _session["status"].name,
         "job_description": _session["input"]["job_description"],
+        "Company_name": _session["input"]["C_name"],
         "notes": _session["input"]["notes"],
     }
     return render_template("run_detail.html", is_valid=True, run=run)

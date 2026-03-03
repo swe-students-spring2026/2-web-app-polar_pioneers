@@ -19,20 +19,20 @@
         <div class="run-card-top">
           <div class="run-card-info">
             <h2 class="run-card-title">
-              <a href="/runs/{{ run._id }}">{{ run.title or (run.company ~ ' — ' ~ run.role) or 'Untitled' }}</a>
+              <a href="/runs/{{ run._session_id }}">{{ run.Company_name or "Didn't specify Company Name" }}</a>
             </h2>
             <span class="run-card-date">{{ run.created_at }}</span>
           </div>
           <div class="run-card-score score-badge">
-            {{ run.score }}
+            {{ run.score if run.score is defined else run.status }}
           </div>
         </div>
 
 
         <div class="run-card-actions">
-          <a href="/runs/{{ run._id }}" class="btn btn--secondary btn--sm">View</a>
-          <a href="/runs/{{ run._id }}/edit" class="btn btn--secondary btn--sm">Edit</a>
-          <a href="/runs/{{ run._id }}/delete" class="btn btn--danger-outline btn--sm">Delete</a>
+          <a href="/runs/{{ run._session_id }}" class="btn btn--secondary btn--sm">View</a>
+          <!-- <a href="/runs/{{ run._id }}/edit" class="btn btn--secondary btn--sm">Edit</a>
+          <a href="/runs/{{ run._id }}/delete" class="btn btn--danger-outline btn--sm">Delete</a> -->
         </div>
       </article>
       {% endfor %}
