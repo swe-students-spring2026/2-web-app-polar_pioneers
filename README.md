@@ -56,3 +56,10 @@ https://github.com/orgs/swe-students-spring2026/projects/48
 
 ### Sprint 2
 https://github.com/orgs/swe-students-spring2026/projects/52
+
+
+
+## Security Notes
+- Each developer must use their own .env file.
+- API keys and database credentials must never be committed.
+- MongoDB Atlas database access is managed per-user for security.
