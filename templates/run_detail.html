@@ -3,7 +3,11 @@
 
 {% block content %}
 <section class="page">
-  <a href="/dashboard" class="back-link">← Back to dashboard</a>
+  {% if run.session_id == -1 %}
+    <a href="/" class="back-link">← Back to login</a>
+  {% else %}
+    <a href="/dashboard" class="back-link">← Back to dashboard</a>
+  {% endif %}
 
   <div class="run-header">
     <div>

@@ -243,6 +243,49 @@ def new_run():
         return redirect(url_for("run_detail", run_id=session_id))
     return render_template("new_run.html", is_valid=True)
 
+@app.route("/runs/1")
+def show_sample():
+    run = {
+            "session_id": -1,
+            "created_at": "",
+            "resume_file_name": "Amazon(SAMPLE.pdf)",
+            "status": "COMPLETE",
+            "job_description": "Amazon sofware engineer",
+            "Company_name":"Amazon",
+            "notes": "I am super good at coding and Jeff Bethos knows me",
+            "score": 92,
+            "strong_matches": [
+        'Relevant education in Computer Science and Mathematics from a prestigious university.',
+        'Strong programming skills in Java, Python, C, and SQL, which are essential for a software engineering role.',
+        'Experience in building scalable REST APIs and working with cloud technologies (AWS).',
+        'Internship experience in AI and software engineering, demonstrating practical application of skills.',
+        'Proven ability to improve system efficiencies and reduce processing times significantly.',
+        'Leadership experience as a founder of a project, showcasing initiative and project management skills.'
+      ],
+            "missing_skills": [
+        'Experience with specific Amazon technologies or frameworks (e.g., AWS services beyond basic knowledge).',
+        'Familiarity with Agile methodologies or software development lifecycle practices.',
+        'Knowledge of front-end technologies (e.g., React, Angular) which may be beneficial for full-stack roles.',
+        'Experience with version control systems (e.g., Git) in a collaborative environment.',
+        'Soft skills such as teamwork, communication, and problem-solving, which are crucial for a software engineer at Amazon.'
+      ],
+            "suggested_edits":[
+        'Include specific projects or contributions that demonstrate teamwork and collaboration.',
+        'Highlight any experience with Agile methodologies or software development processes.',
+        'Add a section for certifications or relevant online courses (e.g., AWS Certified Developer).',
+        'Consider reformatting the resume for better readability, ensuring consistent bullet point styles and spacing.',
+        'Include a brief summary or objective statement at the top to clarify career goals and interest in the Amazon software engineer role.'
+      ],
+            "ai_insights": "Polar Pioneer's resume showcases a strong foundation in software engineering, particularly in AI and backend development, "
+            "which aligns well with the requirements for a software engineer at Amazon. The candidate's experience with building scalable systems and improving efficiencies is a significant asset. "
+            "However, to enhance the application, it would be beneficial to emphasize collaborative experiences and familiarity with Agile practices, as these are often critical in large tech companies like Amazon. "
+            "Additionally, highlighting any specific experience with Amazon's technology stack or methodologies could further strengthen the application. "
+            "Overall, Polar Pioneer presents a solid candidate profile with room for refinement to better match the expectations of the role."
+        }
+    return render_template("run_detail.html", run=run)
+    
+    
+
 
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
