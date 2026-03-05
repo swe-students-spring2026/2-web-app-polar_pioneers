@@ -1,10 +1,9 @@
 import asyncio, os
-import mongo
 import mongoUser
 from datetime import date
 from dotenv import load_dotenv
 from io import BytesIO
-from flask import Flask, flash, redirect, render_template, request, url_for, session
+from flask import Flask, redirect, render_template, request, url_for, session
 from pypdf import PdfReader
 from mongo import initMongo
 
@@ -20,29 +19,13 @@ app = Flask(__name__)
 #get the secret key from env
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
-
-
-def clarification_response(text: str) -> bool:
-    if not text:
-        return True
-    lowered = text.lower()
-    clarification_markers = [
-        "message was cut off",
-        "could you please provide more details",
-        "please provide more details",
-        "clarify your question",
-        "can you clarify",
-        "need more information",
-        "insufficient information",
-    ]
-    return any(marker in lowered for marker in clarification_markers)
-
-
-def _extract_pdf_text(pdf_bytes: bytes) -> str:
+def extract_pdf_text(pdf_bytes: bytes) -> str:
+    #if the uploaded file is emply, return error
     if not pdf_bytes:
-        return "pdf uploading error, make sure it's a pdf file!"
-
+        return "error: input pdf file"
+    #conver the pdf into a file object so the pdf reader can read it
     reader = PdfReader(BytesIO(pdf_bytes))
+    #go through each page and extract the text, then join all the text into one string
     pages_text = [(page.extract_text() or "").strip() for page in reader.pages]
     return "\n\n".join(text for text in pages_text if text).strip()
 
@@ -51,15 +34,15 @@ def _extract_pdf_text(pdf_bytes: bytes) -> str:
 def index():
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
+    #if the user is not logged in or the session is not on, make the session invalid
     if(not user_id or not login_session_id):
         return render_template("index.html", is_valid=False)
+    #ensure the session is valid
     is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
     if(not is_valid):
         return render_template("index.html", is_valid=False)
-
     return render_template("index.html", is_valid=True)
     
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -120,10 +103,9 @@ def signup():
 
 @app.route("/logout")
 def logout():
-    # TODO: better
+    #remove session info and go back to the homepage
     session["user_id"] = ""
     session["login_session_id"] = ""
-    flash("Logged out.", "info")
     return redirect(url_for("index"))
 
 
@@ -131,16 +113,16 @@ def logout():
 def dashboard():
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
+    #if no one is logged in go back to login page
     if(not user_id or not login_session_id):
         return redirect(url_for("login"))
     is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
     if(not is_valid):
         return redirect(url_for("login"))
-    
+    #fetch all the resume analysis runs for this user
     _sessions = mongoSession.getAllSessionsByUser(user_id)
-
     runs = []
-
+    #go through all the sessions to get the display info
     for _session in _sessions:
         if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
             runs.append({
@@ -151,6 +133,7 @@ def dashboard():
                 "job_description": _session["input"]["job_description"],
                 "Company_name": _session["input"]["C_name"],
                 "notes": _session["input"]["notes"],
+                #stuff actually outputed below
                 "score": _session["output"]["match_score"],
                 "strong_matches": _session["output"]["strong_matches"],
                 "missing_skills": _session["output"]["missing_skills"],
@@ -159,6 +142,7 @@ def dashboard():
             })
         else:
             runs.append({
+                #append the basic info for runs that are not completed
                 "_session_id": _session["session_id"],
                 "created_at": _session["input"]["requested_at"].isoformat(),
                 "resume_file_name": _session["input"]["resume_file_name"],
@@ -167,42 +151,39 @@ def dashboard():
                 "Company_name": _session["input"]["C_name"],
                 "notes": _session["input"]["notes"],
             })
-    
     return render_template("dashboard.html", is_valid=True, runs=runs)
 
 
 @app.route("/runs/new", methods=["GET", "POST"])
 def new_run():
+    #redirect to login if login session is not valid
     user_id = session.get("user_id")
-    login_session_id = session.get("login_session_id")
+    login_session_id=session.get("login_session_id")
     if(not user_id or not login_session_id):
         return redirect(url_for("login"))
-    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    is_valid =mongoUser.validateUserLoginSession(user_id, login_session_id)
     if(not is_valid):
         return redirect(url_for("login"))
-    
-    if request.method == "POST":
+    #prepare to pass the info to the agent
+    if request.method== "POST":
         notes = request.form.get("notes", "").strip()
-        job_description = request.form.get("job_description", "").strip()
+        job_description= request.form.get("job_description", "").strip()
         companyName =request.form.get("cName", "").strip()
-
+        #job description is required, redirect back if not provided
         if not job_description:
-            flash("Please paste a job description before running analysis.", "error")
             return redirect(url_for("new_run"))
-
-        parsed_output: parser.AgentOutput | None = None
-        session_id = ""
+        #parsed output will either be structured or none at all
+        parsed_output:parser.AgentOutput|None = None
+        session_id=""
         try:
-
-            from appRun import ResumeGoRun #now extract user inputs on analysis page and put into ResumeAgent
-            
-            uploaded_file = request.files.get("resume_file")
-            resume_filename = uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
-            resume_pdf_bytes = uploaded_file.read() 
-            extracted_resume_text = _extract_pdf_text(resume_pdf_bytes or b"")
-
+            from appRun import ResumeGoRun
+            uploaded_file= request.files.get("resume_file")
+            resume_filename =uploaded_file.filename if uploaded_file and uploaded_file.filename else "Not provided"
+            resume_pdf_bytes = uploaded_file.read()
+            extracted_resume_text = extract_pdf_text(resume_pdf_bytes or b"")
+            #create a new analysis session in the databse
             session_id = mongoSession.createSession(user_id, job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes, companyName)
-
+            #run the agent
             result = asyncio.run(
                 ResumeGoRun(
                     user_input=extracted_resume_text,
@@ -212,24 +193,24 @@ def new_run():
                     notes=notes,
                 )
             )
-
-
             """result is the ouput of our ResumeAgent, need to break the text down to:
             score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
 
             print(result["result"])
+            #put the output in structured fields
             parsed_output = parser.parseAgentOutput(result["result"])
             print(parsed_output)
         except Exception as exc:
+            #if any error occurs, update the session status in MongoDB
             error_msg = f"Analysis failed: {exc}"
             print(error_msg)
             mongoSession.setSessionError(session_id, error_msg)
             return redirect(url_for("run_detail", run_id=session_id))
-
+        #set error if parsing fails
         if(parsed_output is None):
             mongoSession.setSessionError(session_id, error_msg)
             return redirect(url_for("run_detail", run_id=session_id))
-
+        #store the result in the database
         mongoSession.completeSession(
             session_id,
             parsed_output["match_score"],
@@ -238,11 +219,12 @@ def new_run():
             parsed_output["suggested_edits"],
             parsed_output["ai_insights"]
         )
-
-        # flash("Analysis completed.", "success")
+        #return the detailed results page for this run
         return redirect(url_for("run_detail", run_id=session_id))
+    #return the new run page otherwise
     return render_template("new_run.html", is_valid=True)
 
+#sample run display
 @app.route("/runs/1")
 def show_sample():
     run = {
@@ -286,9 +268,10 @@ def show_sample():
     
     
 
-
+#retrieving the details of a analysis session
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
+    #ensure the login session is valid
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     if(not user_id or not login_session_id):
@@ -296,8 +279,9 @@ def run_detail(run_id: str):
     is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
     if(not is_valid):
         return redirect(url_for("login"))
-    
+    #get the session data from mongodb
     _session = mongoSession.getSessionById(run_id)
+    #dummy template incase no sessions exist so nothing crashes
     if(_session is None):
         run = {
             "session_id": "",
@@ -308,7 +292,6 @@ def run_detail(run_id: str):
             "notes": ""
         }
         return render_template("run_detail.html", run=run)
-        
     if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
         run = {
             "session_id": run_id,
@@ -318,6 +301,7 @@ def run_detail(run_id: str):
             "job_description": _session["input"]["job_description"],
             "Company_name": _session["input"]["C_name"],
             "notes": _session["input"]["notes"],
+            #stuff actually outputed below
             "score": _session["output"]["match_score"],
             "strong_matches": _session["output"]["strong_matches"],
             "missing_skills": _session["output"]["missing_skills"],
@@ -334,6 +318,7 @@ def run_detail(run_id: str):
         "Company_name": _session["input"]["C_name"],
         "notes": _session["input"]["notes"],
     }
+    #render the page
     return render_template("run_detail.html", is_valid=True, run=run)
 
 

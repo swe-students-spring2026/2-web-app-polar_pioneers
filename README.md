@@ -29,9 +29,22 @@ ResumeGo enables job applicants to improve their chances of landing interviews b
 **Install dependencies**
    - Make sure you have Python 3.10+ installed.
    - Install Pipenv (if not already installed):
-     ```bash
-     pip install pipenv
+      ```bash
+      pip install pipenv
+      ```
 
+**Configure environment**
+   - Create a `.env` file in the project root using `env.example` as a template
+      ```bash
+      cp env.example .env
+      ```
+**Add your OpenAI API key**
+   - In the `.env` file, add your own OpenAI API key
+      ```env
+      OPENAI_API_KEY=your_api_key_here
+      ```
+   - If you do not have an API key, you can request one on Discord from **Blake Chang (`blakec1313`)** or in the **Polar Pioneer group**.
+   
 **Run your pipenv**
    Activation: pipenv shell
 
@@ -45,8 +58,6 @@ ResumeGo enables job applicants to improve their chances of landing interviews b
    Go to appRun.py and type: pipenv run python appRun.py
 
 
-
-
 ## Task boards
 
 Here are the links for our task boards:
@@ -57,9 +68,10 @@ https://github.com/orgs/swe-students-spring2026/projects/48
 ### Sprint 2
 https://github.com/orgs/swe-students-spring2026/projects/52
 
-
-
 ## Security Notes
 - Each developer must use their own .env file.
 - API keys and database credentials must never be committed.
 - MongoDB Atlas database access is managed per-user for security.
+
+## Acknowledgements
+We used Lovable AI to assist in generating the front end components of our project, specifically the HTML and CSS files used to structure and style the interface. We also reused portions of code from Blake’s previous computer science project to help set up the agent. All other parts of the project, including the Flask application logic, MongoDB integration, user login and signup, and routing between pages, were written by our team. In particular, we implemented the backend that handles user signup/login, session management, and communication between the front end, and the database configuration.
