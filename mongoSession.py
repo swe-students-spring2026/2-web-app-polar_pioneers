@@ -23,6 +23,7 @@ class SessionInput(TypedDict):
     resume_file_name: str
     resume_file_id: ObjectId
     resume_file_type: str
+    C_name: str
     notes: str
 
 class SessionOutput(TypedDict):
