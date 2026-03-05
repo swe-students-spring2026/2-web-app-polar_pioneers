@@ -49,6 +49,7 @@ def _extract_pdf_text(pdf_bytes: bytes) -> str:
 
 @app.route("/")
 def index():
+    # validation
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     if(not user_id or not login_session_id):
@@ -129,6 +130,7 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
+    # validation
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     if(not user_id or not login_session_id):
@@ -141,6 +143,7 @@ def dashboard():
 
     runs = []
 
+    # create data to fill in template
     for _session in _sessions:
         if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
             runs.append({
@@ -173,6 +176,7 @@ def dashboard():
 
 @app.route("/runs/new", methods=["GET", "POST"])
 def new_run():
+    # validation
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     if(not user_id or not login_session_id):
@@ -181,6 +185,7 @@ def new_run():
     if(not is_valid):
         return redirect(url_for("login"))
     
+    # handle user running new analysis
     if request.method == "POST":
         notes = request.form.get("notes", "").strip()
         job_description = request.form.get("job_description", "").strip()
@@ -203,6 +208,7 @@ def new_run():
 
             session_id = mongoSession.createSession(user_id, job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes, companyName)
 
+            # run agent
             result = asyncio.run(
                 ResumeGoRun(
                     user_input=extracted_resume_text,
@@ -213,10 +219,10 @@ def new_run():
                 )
             )
 
-
             """result is the ouput of our ResumeAgent, need to break the text down to:
             score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
 
+            # parse agent output
             print(result["result"])
             parsed_output = parser.parseAgentOutput(result["result"])
             print(parsed_output)
@@ -289,6 +295,7 @@ def show_sample():
 
 @app.route("/runs/<run_id>")
 def run_detail(run_id: str):
+    # validation
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     if(not user_id or not login_session_id):
@@ -298,6 +305,8 @@ def run_detail(run_id: str):
         return redirect(url_for("login"))
     
     _session = mongoSession.getSessionById(run_id)
+
+    # if session doesn't exist
     if(_session is None):
         run = {
             "session_id": "",
@@ -309,6 +318,7 @@ def run_detail(run_id: str):
         }
         return render_template("run_detail.html", run=run)
         
+    # if session is complete
     if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
         run = {
             "session_id": run_id,
@@ -325,6 +335,8 @@ def run_detail(run_id: str):
             "ai_insights": _session["output"]["ai_insights"]
         }
         return render_template("run_detail.html", run=run)
+    
+    # if session is either still pending or error
     run = {
         "session_id": run_id,
         "created_at": _session["input"]["requested_at"].isoformat(),
