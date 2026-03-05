@@ -75,3 +75,7 @@ https://github.com/orgs/swe-students-spring2026/projects/52
 
 ## Acknowledgements
 We used Lovable AI to assist in generating the front end components of our project, specifically the HTML and CSS files used to structure and style the interface. We also reused portions of code from Blake’s previous computer science project to help set up the agent. All other parts of the project, including the Flask application logic, MongoDB integration, user login and signup, and routing between pages, were written by our team. In particular, we implemented the backend that handles user signup/login, session management, and communication between the front end, and the database configuration.
+
+## Future aspect/Fun fact:
+- Feel free to test the analysis with positive/negative inputs, and you will get a reasonable feedback.
+- Scoring of the agent can be even more precise if we train the model with more applicants, down to digits.
