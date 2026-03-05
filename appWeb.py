@@ -316,7 +316,7 @@ def run_detail(run_id: str):
             "job_description": "",
             "notes": ""
         }
-        return render_template("run_detail.html", run=run)
+        return render_template("run_detail.html", is_valid=True, run=run)
         
     # if session is complete
     if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
@@ -334,7 +334,7 @@ def run_detail(run_id: str):
             "suggested_edits": _session["output"]["suggested_edits"],
             "ai_insights": _session["output"]["ai_insights"]
         }
-        return render_template("run_detail.html", run=run)
+        return render_template("run_detail.html", is_valid=True, run=run)
     
     # if session is either still pending or error
     run = {
