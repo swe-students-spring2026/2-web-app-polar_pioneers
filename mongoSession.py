@@ -41,6 +41,7 @@ class Session(TypedDict):
     input: SessionInput
     output: SessionOutput | None
 
+# helper function for converting status enum
 def _castToSession(session: dict) -> Session | None:
     status = session["status"]
     match status:
@@ -63,6 +64,7 @@ def _castToSessionList(sessions: list[dict]) -> list[Session]:
             sessions_new.append(session)
     return sessions_new
 
+# creates session with input as args, and returns session id
 def createSession(user_id: str, job_description: str, resume_file_name, resume_file_bytes: bytes, resume_file_type: str = "application/pdf", notes: str = "", companyName:str="") -> str:
     session_id = str(uuid.uuid4())
 
@@ -116,6 +118,7 @@ def getAllSessionsByUserInStatus(user_id: str, status: SessionStatus) -> list[Se
     results = list(getCollectionSessions().find({"user_id": user_id, "status": status.name}).sort("input.requested_at", -1))
     return _castToSessionList(results)
 
+# sets session output to args and status to COMPLETE
 def completeSession(session_id: str, match_score: int, strong_matches: list[str], missing_skills: list[str], suggested_edits: list[str], ai_insights: str) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
@@ -134,6 +137,7 @@ def completeSession(session_id: str, match_score: int, strong_matches: list[str]
 
     return result.modified_count == 1
 
+# sets session status to ERROR
 def setSessionError(session_id: str, error_msg: str) -> bool:
     result = getCollectionSessions().update_one(
         {"session_id": session_id},
