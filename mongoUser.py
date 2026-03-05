@@ -115,11 +115,3 @@ def getUserByEmail(email: str) -> User | None:
     if(result is None):
         return None
     return cast(User, result)
-
-# TODO: setUserUsername
-# TODO: setUserPassword
-# TODO: setUserNameFirst
-# TODO: setUserNameLast
-# TODO: setUserEmail
-
-# TODO: removeUser
