@@ -192,6 +192,7 @@ ul, ol { list-style: none; }
   background: var(--color-bg);
   color: var(--color-text);
   transition: border-color .15s;
+  appearance: none;
   -webkit-appearance: none;
 }
 .form-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(15,111,236,.12); }
@@ -236,6 +237,8 @@ ul, ol { list-style: none; }
 .run-card-date { font-size: .8rem; color: var(--color-text-muted); }
 .run-card-meta { margin-top: .5rem; }
 .run-card-actions { display: flex; gap: .5rem; margin-top: .75rem; }
+/* form shouldn't break button row */
+.inline-form { display: inline; }
 
 /* Score Badge */
 .score-badge {

@@ -331,5 +331,70 @@ def run_detail(run_id: str):
     return render_template("run_detail.html", is_valid=True, run=run)
 
 
+@app.route("/runs/<run_id>/edit", methods=["GET", "POST"])
+def edit_run(run_id: str):
+    # edit page for a single saved run
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+
+    _session = mongoSession.getSessionById(run_id)
+    if(_session is None or _session["user_id"] != user_id):
+        # wrong id or not your run
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        job_description = request.form.get("job_description", "").strip()
+        company_name = request.form.get("cName", "").strip()
+        notes = request.form.get("notes", "").strip()
+
+        if not job_description:
+            # keep this required like new_run
+            run = {
+                "session_id": run_id,
+                "created_at": _session["input"]["requested_at"].isoformat(),
+                "resume_file_name": _session["input"]["resume_file_name"],
+                "job_description": _session["input"]["job_description"],
+                "Company_name": _session["input"]["C_name"],
+                "notes": _session["input"]["notes"]
+            }
+            return render_template("edit_run.html", is_valid=True, run=run, error_msg="Job description is required.")
+
+        # only basic input fields are editable
+        mongoSession.updateSessionInput(run_id, user_id, job_description, notes, company_name)
+        return redirect(url_for("run_detail", run_id=run_id))
+
+    run = {
+        "session_id": run_id,
+        "created_at": _session["input"]["requested_at"].isoformat(),
+        "resume_file_name": _session["input"]["resume_file_name"],
+        "job_description": _session["input"]["job_description"],
+        "Company_name": _session["input"]["C_name"],
+        "notes": _session["input"]["notes"]
+    }
+    return render_template("edit_run.html", is_valid=True, run=run)
+
+
+@app.route("/runs/<run_id>/delete", methods=["POST"])
+def delete_run(run_id: str):
+    # dashboard delete button posts here
+    user_id = session.get("user_id")
+    login_session_id = session.get("login_session_id")
+    if(not user_id or not login_session_id):
+        return redirect(url_for("login"))
+
+    is_valid = mongoUser.validateUserLoginSession(user_id, login_session_id)
+    if(not is_valid):
+        return redirect(url_for("login"))
+
+    mongoSession.deleteSessionById(run_id, user_id)
+    return redirect(url_for("dashboard"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
