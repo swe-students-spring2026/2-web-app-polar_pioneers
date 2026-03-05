@@ -1,7 +1,7 @@
 from agent import ResumeAgent
-import asyncio
+import asyncio  # Needed to run the async ResumeGoRun() entry point from this standalone script.
 from state import AppState
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph, START, END #this is the workflow that will pass Agent STATE and update variables of it
 
 
 
@@ -12,15 +12,15 @@ async def ResumeGoRun(
     job_description: str | None = None,
     notes: str | None = None,
 ):
-    
+    #create an state that store resume analysis inputs for each run
     userState= AppState(
-            user_input=user_input,
+            user_input=user_input, #resume content
             resume_file_name=resume_file_name,
             resume_pdf_bytes=resume_pdf_bytes,
             job_description=job_description,
             notes=notes,
         )
-    agentNode  = ResumeAgent(
+    agentNode  = ResumeAgent( # this node is set in workflow to pass State in to analysis resume with agent
         prompt=(
             "You are an expert resume reviewer. Analyze the provided information and return helpful, specific feedback. "
             "If resume details are incomplete, make reasonable assumptions and still provide an answer. "
@@ -30,21 +30,21 @@ async def ResumeGoRun(
     )
 
     
-    workflow = StateGraph(AppState)
+    workflow = StateGraph(AppState) #state is the main input/output for my langgraph workflow
     workflow.add_node("chat", agentNode)
 
   
     workflow.add_edge(START, "chat")
-    workflow.add_edge("chat", END)
+    workflow.add_edge("chat", END) #the goal is to put all the anaysis input and store agent output in state.result 
    
    
     resumeGo  = workflow.compile()
-    return await resumeGo.ainvoke(userState)
+    return await resumeGo.ainvoke(userState) #this will return the entire updated state(AppState) object
     
 
 
 if __name__ == "__main__":
-    import asyncio
+    import asyncio  # to create/manage the event loop for testing for this file.
     from pypdf import PdfReader
     from io import BytesIO
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         pages_text = [(page.extract_text() or "").strip() for page in reader.pages]
         return "\n\n".join(text for text in pages_text if text).strip()
 
-    file_path="/Users/blakechang/Desktop/swe_gitpract/2-web-app-polar_pioneers/_Blake Chang's Resume.pdf"
+    file_path="~/Desktop/filename.pdf"
     with open(file_path, 'rb') as f:
          resume_pdf_bytes = f.read()
 

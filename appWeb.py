@@ -130,7 +130,7 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
-    # validation
+    # validation to ensure it's the right user 
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     if(not user_id or not login_session_id):
@@ -139,7 +139,7 @@ def dashboard():
     if(not is_valid):
         return redirect(url_for("login"))
     
-    _sessions = mongoSession.getAllSessionsByUser(user_id)
+    _sessions = mongoSession.getAllSessionsByUser(user_id) #this will get all the records of the same user from our mongoDB
 
     runs = []
 
@@ -152,7 +152,7 @@ def dashboard():
                 "resume_file_name": _session["input"]["resume_file_name"],
                 "status": _session["status"].name,
                 "job_description": _session["input"]["job_description"],
-                "Company_name": _session["input"]["C_name"],
+                "Company_name": _session["input"]["C_name"], #this is going to be shown on dashboard
                 "notes": _session["input"]["notes"],
                 "score": _session["output"]["match_score"],
                 "strong_matches": _session["output"]["strong_matches"],
@@ -208,7 +208,7 @@ def new_run():
 
             session_id = mongoSession.createSession(user_id, job_description, resume_filename, resume_pdf_bytes, "application/pdf", notes, companyName)
 
-            # run agent
+            # run the entire langgraph workflow to get the output from agent
             result = asyncio.run(
                 ResumeGoRun(
                     user_input=extracted_resume_text,
@@ -223,7 +223,7 @@ def new_run():
             score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
 
             # parse agent output
-            print(result["result"])
+            print(result["result"]) #this is actually state.result (check state.py and appRun.py)
             parsed_output = parser.parseAgentOutput(result["result"])
             print(parsed_output)
         except Exception as exc:
@@ -250,7 +250,7 @@ def new_run():
     return render_template("new_run.html", is_valid=True)
 
 @app.route("/runs/1")
-def show_sample():
+def show_sample(): #just an example page for user to check before login
     run = {
             "session_id": -1,
             "created_at": "",

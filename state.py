@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel # needed to keep AppState validated and consistent across the workflow.
 
-
+#State is going to be passed around the entire END TO END
 class AppState(BaseModel):
     """
     State model for the AI ResumeGo system.
