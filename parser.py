@@ -7,9 +7,13 @@ class AgentOutput(TypedDict):
     suggested_edits: list[str]
     ai_insights: str
 
+# a very hacked together parser
 def parseAgentOutput(result) -> AgentOutput:
     result = result.strip()
 
+    # we are searching for "**Match Score:" instead of "**Match Score:**" because
+    # sometimes the agent outputs like "**Match Score: 85**" and sometimes it
+    # outputs like "**Match Score:** 85". this approach is more robust.
     key_score = "**Match Score:"
     key_matches = "**Strong Matches:"
     key_skills = "**Missing Skills:"
@@ -22,6 +26,7 @@ def parseAgentOutput(result) -> AgentOutput:
     index_key_edits = result.find(key_edits)
     index_key_insights = result.find(key_insights)
 
+    # if one or more of the keywords/titles are missing, then give up parsing
     if(index_key_score == -1 or index_key_matches == -1 or index_key_skills == -1 or index_key_edits == -1 or index_key_insights == -1):
         return None
 
@@ -32,6 +37,9 @@ def parseAgentOutput(result) -> AgentOutput:
     value_insights = ""
 
     # score
+    # this combines all the digits in the "match score" sections together, regardless
+    # of spacing or non-digit characters, so the string like "1 2 blah blah 34" would
+    # be parsed into 1234. not the best algorithm but works for our agent.
     int_accumulator = ""
     i = index_key_score + len(key_score)
     while(i < index_key_matches):
@@ -66,6 +74,10 @@ def parseAgentOutput(result) -> AgentOutput:
         value_insights += result[i]
         i += 1
 
+    # this ensures:
+    #   the remaining "**" symbols (from the title) are removed
+    #   the "-" symbols at the beginning of each line (from bullet point list) are removed
+    #   each line is stripped
     def cleanup(s: str):
         spl = s.split("\n")
         splnew = []
