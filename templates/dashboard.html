@@ -30,7 +30,13 @@
 
 
         <div class="run-card-actions">
+          <!-- quick actions per run -->
           <a href="/runs/{{ run._session_id }}" class="btn btn--secondary btn--sm">View</a>
+          <a href="/runs/{{ run._session_id }}/edit" class="btn btn--secondary btn--sm">Edit</a>
+          <!-- keep delete as POST -->
+          <form method="POST" action="/runs/{{ run._session_id }}/delete" class="inline-form" onsubmit="return confirm('Delete this run? This cannot be undone.');">
+            <button type="submit" class="btn btn--danger-outline btn--sm">Delete</button>
+          </form>
         </div>
       </article>
       {% endfor %}

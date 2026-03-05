@@ -3,34 +3,29 @@
 
 {% block content %}
 <section class="page">
-  <a href="/runs/{{ run._id }}" class="back-link">← Back to detail</a>
+  <a href="/runs/{{ run.session_id }}" class="back-link">← Back to detail</a>
   <h1 class="page-title">Edit Analysis</h1>
 
-  <form method="POST" action="/runs/{{ run._id }}/edit" class="form">
+  {% if error_msg %}
+    <p class="form-error">{{ error_msg }}</p>
+  {% endif %}
+
+  <form method="POST" action="/runs/{{ run.session_id }}/edit" class="form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
 
     <div class="form-group">
-      <label for="title" class="form-label">Title</label>
-      <input type="text" id="title" name="title" class="form-input" value="{{ run.title or '' }}">
+      <label for="resume_file_name" class="form-label">Resume file</label>
+      <input type="text" id="resume_file_name" class="form-input" value="{{ run.resume_file_name or '' }}" readonly>
     </div>
 
     <div class="form-group">
-      <label for="company" class="form-label">Company</label>
-      <input type="text" id="company" name="company" class="form-input" value="{{ run.company or '' }}">
+      <label for="cName" class="form-label">Company</label>
+      <input type="text" id="cName" name="cName" class="form-input" value="{{ run.Company_name or '' }}">
     </div>
 
     <div class="form-group">
-      <label for="role" class="form-label">Role</label>
-      <input type="text" id="role" name="role" class="form-input" value="{{ run.role or '' }}">
-    </div>
-
-    <div class="form-group">
-      <label for="status" class="form-label">Status</label>
-      <select id="status" name="status" class="form-input form-select">
-        {% for s in ['Draft','Applied','Interview','Offer','Rejected'] %}
-          <option value="{{ s }}" {% if run.status == s %}selected{% endif %}>{{ s }}</option>
-        {% endfor %}
-      </select>
+      <label for="job_description" class="form-label">Job description <span class="required">*</span></label>
+      <textarea id="job_description" name="job_description" class="form-input form-textarea" rows="8" required>{{ run.job_description or '' }}</textarea>
     </div>
 
     <div class="form-group">
@@ -40,7 +35,7 @@
 
     <div class="form-actions">
       <button type="submit" class="btn btn--primary btn--lg btn--block">Save changes</button>
-      <a href="/runs/{{ run._id }}" class="btn btn--secondary btn--lg btn--block">Cancel</a>
+      <a href="/runs/{{ run.session_id }}" class="btn btn--secondary btn--lg btn--block">Cancel</a>
     </div>
   </form>
 </section>

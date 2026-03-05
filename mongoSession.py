@@ -159,3 +159,42 @@ def getFileBytesById(file_id: ObjectId) -> bytes | None:
         return None
 
     return buffer.getvalue()
+
+
+def updateSessionInput(session_id: str, user_id: str, job_description: str, notes: str, company_name: str) -> bool:
+    # user_id check keeps edits scoped to owner
+    result = getCollectionSessions().update_one(
+        {"session_id": session_id, "user_id": user_id},
+        {"$set": {
+            "input.job_description": job_description,
+            "input.notes": notes,
+            "input.C_name": company_name
+        }}
+    )
+
+    return result.modified_count == 1
+
+
+def deleteSessionById(session_id: str, user_id: str) -> bool:
+    # grab resume file id first so we can clean it too
+    existing = getCollectionSessions().find_one(
+        {"session_id": session_id, "user_id": user_id},
+        {"input.resume_file_id": 1}
+    )
+    if(existing is None):
+        return False
+
+    resume_file_id = existing.get("input", {}).get("resume_file_id")
+
+    result = getCollectionSessions().delete_one({"session_id": session_id, "user_id": user_id})
+    if(result.deleted_count != 1):
+        return False
+
+    if(resume_file_id is not None):
+        try:
+            getBucketResumes().delete(ObjectId(resume_file_id))
+        except NoFile:
+            # already gone, no need to fail delete
+            pass
+
+    return True
