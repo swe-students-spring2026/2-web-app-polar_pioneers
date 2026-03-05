@@ -32,6 +32,7 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
 
 @app.route("/")
 def index():
+    # validation
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     #if the user is not logged in or the session is not on, make the session invalid
@@ -111,6 +112,7 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
+    # validation
     user_id = session.get("user_id")
     login_session_id = session.get("login_session_id")
     #if no one is logged in go back to login page
@@ -122,7 +124,7 @@ def dashboard():
     #fetch all the resume analysis runs for this user
     _sessions = mongoSession.getAllSessionsByUser(user_id)
     runs = []
-    #go through all the sessions to get the display info
+    #create data to fill in template
     for _session in _sessions:
         if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
             runs.append({
@@ -163,9 +165,9 @@ def new_run():
         return redirect(url_for("login"))
     is_valid =mongoUser.validateUserLoginSession(user_id, login_session_id)
     if(not is_valid):
-        return redirect(url_for("login"))
-    #prepare to pass the info to the agent
-    if request.method== "POST":
+        return redirect(url_for("login"))    
+    #handle user running new analysis
+    if request.method == "POST":
         notes = request.form.get("notes", "").strip()
         job_description= request.form.get("job_description", "").strip()
         companyName =request.form.get("cName", "").strip()
@@ -193,9 +195,11 @@ def new_run():
                     notes=notes,
                 )
             )
+
             """result is the ouput of our ResumeAgent, need to break the text down to:
             score,match_score,strong_matches,missing_skills,suggested_edits,ai_insights"""
 
+            # parse agent output
             print(result["result"])
             #put the output in structured fields
             parsed_output = parser.parseAgentOutput(result["result"])
@@ -291,7 +295,9 @@ def run_detail(run_id: str):
             "job_description": "",
             "notes": ""
         }
-        return render_template("run_detail.html", run=run)
+        return render_template("run_detail.html", is_valid=True, run=run)
+        
+    # if session is complete
     if(_session["status"] == mongoSession.SessionStatus.COMPLETE):
         run = {
             "session_id": run_id,
@@ -308,7 +314,9 @@ def run_detail(run_id: str):
             "suggested_edits": _session["output"]["suggested_edits"],
             "ai_insights": _session["output"]["ai_insights"]
         }
-        return render_template("run_detail.html", run=run)
+        return render_template("run_detail.html", is_valid=True, run=run)
+    
+    # if session is either still pending or error
     run = {
         "session_id": run_id,
         "created_at": _session["input"]["requested_at"].isoformat(),
