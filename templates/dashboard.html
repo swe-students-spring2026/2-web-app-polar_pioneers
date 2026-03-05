@@ -12,14 +12,14 @@
     + Start new analysis
   </a>
 
-  {% if runs and runs|length > 0 %}
+  {% if runs and runs|length > 0 %} <!-- runs should have all the session from the same user( we match with unique user_id)-->
     <div class="run-list">
       {% for run in runs %}
       <article class="run-card">
         <div class="run-card-top">
           <div class="run-card-info">
-            <h2 class="run-card-title">
-              <a href="/runs/{{ run._session_id }}">{{ run.Company_name or "Didn't specify Company Name" }}</a>
+            <h2 class="run-card-title"> 
+              <a href="/runs/{{ run._session_id }}">{{ run.Company_name or "Didn't specify Company Name" }}</a>  <!-- I want each record to separate with company -->
             </h2>
             <span class="run-card-date">{{ run.created_at }}</span>
           </div>
@@ -31,8 +31,6 @@
 
         <div class="run-card-actions">
           <a href="/runs/{{ run._session_id }}" class="btn btn--secondary btn--sm">View</a>
-          <!-- <a href="/runs/{{ run._id }}/edit" class="btn btn--secondary btn--sm">Edit</a>
-          <a href="/runs/{{ run._id }}/delete" class="btn btn--danger-outline btn--sm">Delete</a> -->
         </div>
       </article>
       {% endfor %}
